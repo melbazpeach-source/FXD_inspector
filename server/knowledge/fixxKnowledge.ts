@@ -191,6 +191,50 @@ The statement must include:
 - Landlord enters without proper notice
 - Landlord increases rent more than once in 12 months
 
+## Smoke Alarms — Residential Tenancies (Smoke Alarms and Insulation) Regulations 2016
+
+Smoke alarms are a **separate legal requirement** from the Healthy Homes Standards, governed by the Residential Tenancies (Smoke Alarms and Insulation) Regulations 2016.
+
+### Mandatory Requirements
+- Working smoke alarms are compulsory in ALL rental homes, boarding houses, rental caravans, and self-contained sleep-outs
+- At least one alarm **within 3 metres** of each bedroom door, OR in every room where a person sleeps
+- At least one alarm on **each level/storey** of a multi-storey home
+
+### New Alarm Requirements (installed after 1 July 2016)
+- Must be **photoelectric** type (NOT ionisation, NOT heat-only)
+- Battery life of **at least 8 years**, OR hard-wired to mains power
+- Must be installed according to manufacturer's instructions
+- Must meet international standards (AS 3786:2014 or equivalent)
+
+### Existing Alarm Exemption
+- Alarms installed BEFORE 1 July 2016 do NOT need to be replaced if they are working and have not passed their expiry date
+- When ANY alarm is replaced, the new alarm MUST meet current standards (photoelectric, long-life battery)
+
+### Landlord Responsibilities
+- Ensure alarms are working at the **start of each new tenancy**
+- Ensure alarms remain in working order during the tenancy
+- Replace batteries in common areas of boarding houses
+
+### Tenant Responsibilities
+- Must NOT damage, remove, or disconnect a smoke alarm
+- Replace dead batteries during the tenancy (older-style alarms with replaceable batteries)
+- Notify landlord of any problems as soon as possible
+
+### Penalties
+- Landlord non-compliance: up to **$7,200**
+- Tenant non-compliance: up to **$4,000**
+
+### Best Practice (FENZ — not legally required but strongly recommended)
+- Interconnected alarms for multi-storey properties (when one sounds, all sound)
+- Alarm in every bedroom for maximum protection
+- Test alarms monthly, clean every 6 months
+- Replace all alarms every 10 years regardless of battery status
+
+### Compliance Assessment
+NON-COMPLIANT if any of: no alarm within 3m of a bedroom; any alarm not working; any alarm past expiry; new alarm (post July 2016) that is ionisation type; new alarm without long-life battery or hard-wiring; missing coverage on any level of multi-storey property.
+
+COMPLIANT if all of: working alarm within 3m of each bedroom; each level covered; all alarms working; all new alarms are photoelectric with long-life battery or hard-wired.
+
 ## Your Tools (Available Actions)
 
 When a user asks you to take an action, you can:
@@ -203,6 +247,8 @@ When a user asks you to take an action, you can:
 - Calculate heating capacity for a room (given dimensions)
 - Draft a rent increase notice
 - Summarise outstanding maintenance across a portfolio
+- Assess smoke alarm compliance for a property
+- Advise on smoke alarm type, placement, and replacement requirements
 
 Always confirm before taking irreversible actions (sending emails, creating records).
 `;
@@ -248,6 +294,17 @@ Penalty for non-compliance: up to $7,200 per standard
 - Landlord (periodic): 90 days notice (general), 42 days (owner/family moving in)
 - Tenant (periodic): 21 days notice
 - Fixed-term: cannot end early except by agreement or serious breach
+  `,
+
+  smokeAlarms: `
+**Smoke Alarms (Residential Tenancies (Smoke Alarms and Insulation) Regulations 2016):**
+- Compulsory in ALL rental homes
+- At least one alarm within 3m of each bedroom door, or in every sleeping room
+- At least one alarm on each level of multi-storey homes
+- New alarms (post July 2016): must be PHOTOELECTRIC with 8yr+ battery or hard-wired
+- Existing alarms (pre July 2016): exempt if still working and not expired
+- Landlord penalty: up to $7,200 | Tenant penalty: up to $4,000
+- Best practice: interconnected alarms for multi-storey, test monthly, replace every 10 years
   `,
 };
 

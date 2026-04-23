@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Sparkles,
   CheckSquare,
+  Flame,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -40,6 +41,7 @@ const NAV_GROUPS = [
     items: [
       { icon: Package,    label: "Chattels",   href: "/chattels" },
       { icon: ShoppingBag, label: "Inventory",  href: "/inventory" },
+      { icon: Flame,      label: "Smoke Alarms",  href: "/smoke-alarms", badge: "SA" },
       { icon: Shield,     label: "Healthy Homes", href: "/healthy-homes", badge: "HH" },
     ],
   },

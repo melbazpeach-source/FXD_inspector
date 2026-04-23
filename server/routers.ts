@@ -12,6 +12,7 @@ import { integrationsRouter } from "./routers/integrations";
 import { chattelsRouter } from "./routers/chattels";
 import { healthyHomesRouter } from "./routers/healthyHomes";
 import { agentWorkflowRouter } from "./routers/agentWorkflow";
+import { smokeAlarmsRouter } from "./routers/smokeAlarms";
 
 export const appRouter = router({
   system: systemRouter,
@@ -33,6 +34,7 @@ export const appRouter = router({
   chattels: chattelsRouter,
   healthyHomes: healthyHomesRouter,
   agent: agentWorkflowRouter,
+  smokeAlarms: smokeAlarmsRouter,
 });
 
 export type AppRouter = typeof appRouter;

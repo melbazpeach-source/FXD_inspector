@@ -656,3 +656,29 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 - [ ] Health check endpoint
 - [ ] Exportable ZIP package
 - [ ] Standalone pitch demo HTML file
+
+## Smoke Alarms Compliance Feature
+
+- [x] Add smoke_alarms table to drizzle/schema.ts
+- [x] Generate migration SQL and apply via MCP
+- [x] Add smoke alarm CRUD + compliance procedures to server/routers
+- [x] Build SmokeAlarms.tsx page with per-alarm documentation UI
+- [x] Add compliance status calculation (pass/fail per NZ rules)
+- [x] Add SmokeAlarms route to App.tsx and sidebar nav
+- [x] Teach Fixx AI the NZ smoke alarm rules
+- [x] Integrate smoke alarm check into Healthy Homes assessment
+- [x] Add smoke alarm demo data for 14 Rata Street
+- [x] Write vitest tests for smoke alarm procedures
+
+## Smoke Alarms Compliance Feature
+
+- [x] Add smoke_alarms table to drizzle/schema.ts
+- [x] Generate migration SQL and apply via MCP
+- [x] Add smoke alarm CRUD + compliance procedures to server/routers
+- [x] Build SmokeAlarms.tsx page with per-alarm documentation UI
+- [x] Add compliance status calculation (pass/fail per NZ rules)
+- [x] Add SmokeAlarms route to App.tsx and sidebar nav
+- [x] Teach Fixx AI the NZ smoke alarm rules
+- [x] Integrate smoke alarm check into Healthy Homes assessment
+- [x] Add smoke alarm demo data for 14 Rata Street
+- [x] Write vitest tests for smoke alarm procedures

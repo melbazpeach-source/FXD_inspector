@@ -433,3 +433,40 @@ export const syncLogs = mysqlTable("sync_logs", {
 });
 
 export type SyncLog = typeof syncLogs.$inferSelect;
+
+// ─── Smoke Alarms ─────────────────────────────────────────────────────────────
+export const smokeAlarms = mysqlTable("smoke_alarms", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("property_id").notNull(),
+  inspectionId: int("inspection_id"),
+  // Location
+  location: varchar("location", { length: 256 }).notNull(), // e.g. "Hallway outside master bedroom"
+  level: mysqlEnum("level", ["ground", "first", "second", "third", "basement", "single_storey"]).default("ground"),
+  distanceFromBedroom: varchar("distance_from_bedroom", { length: 32 }), // e.g. "2.1m", "in room"
+  // Alarm type & power
+  alarmType: mysqlEnum("alarm_type", ["photoelectric", "ionisation", "heat", "combined", "unknown"]).default("unknown"),
+  powerSource: mysqlEnum("power_source", ["long_life_battery", "replaceable_battery", "hard_wired", "unknown"]).default("unknown"),
+  // Status
+  isWorking: boolean("is_working").default(true),
+  isTested: boolean("is_tested").default(false),
+  isInterconnected: boolean("is_interconnected").default(false),
+  // Dates
+  expiryDate: varchar("expiry_date", { length: 32 }), // stored as string e.g. "2031-06"
+  installDate: varchar("install_date", { length: 32 }),
+  lastTestedDate: varchar("last_tested_date", { length: 32 }),
+  // Compliance
+  meetsStandards: boolean("meets_standards").default(true),
+  complianceNotes: text("compliance_notes"),
+  // Evidence
+  photoUrl: text("photo_url"),
+  photoKey: text("photo_key"),
+  // Pre-dates July 2016 (existing alarm exemption)
+  isPreRegulation: boolean("is_pre_regulation").default(false),
+  // Inspector notes
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SmokeAlarm = typeof smokeAlarms.$inferSelect;
+export type InsertSmokeAlarm = typeof smokeAlarms.$inferInsert;
