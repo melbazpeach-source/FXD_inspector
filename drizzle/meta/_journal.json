@@ -1,5 +1,34 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1776968788070,
+      "tag": "0000_many_blizzard",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1776968970834,
+      "tag": "0001_absent_pet_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776969048703,
+      "tag": "0002_youthful_absorbing_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1776972078166,
+      "tag": "0003_flawless_shinobi_shaw",
+      "breakpoints": true
+    }
+  ]
 }
