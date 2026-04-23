@@ -702,3 +702,17 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 - [ ] Rebuild LandlordPortal UI: drafts queue, PM review panel, approve/edit/reject, then send
 - [ ] Seed demo data with correct draft/approved/sent statuses
 - [ ] Make Landlord Portal responsive (mobile-first, collapsible owner list, stacked tabs)
+
+## AI Marketing Photos on Rent Appraisal
+- [ ] Add marketing_photos table to schema (propertyId, inspectionId, url, storageKey, style, prompt, createdAt)
+- [ ] Build tRPC procedure to generate 2-3 AI marketing photos per inspection using room descriptions
+- [ ] Update Rent Appraisal page to display marketing photos with download button
+- [ ] Generate demo marketing photos for 14 Rata Street
+
+## Owners Page Fixes
+- [ ] Make Owners page fully responsive (mobile tap-to-detail, back button)
+- [ ] Add Push to CRM button on owner detail (Palace, Console, PropertyTree, standalone mode)
+
+## Owners Page Fixes
+- [ ] Make Owners page fully responsive (mobile tap-to-detail, back button)
+- [ ] Add Push to CRM button on owner detail (Palace, Console, PropertyTree, standalone mode)

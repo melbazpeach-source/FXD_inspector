@@ -490,6 +490,12 @@ export const owners = mysqlTable("owners", {
   // Portal access
   portalEnabled: boolean("portal_enabled").default(false),
   portalToken: varchar("portal_token", { length: 128 }), // secure token for landlord portal login
+  // CRM integration
+  platformRef: varchar("platform_ref", { length: 128 }),  // ID in the external CRM
+  platformSource: mysqlEnum("platform_source", ["palace", "console", "propertytree", "rest", "standalone", "manual"]).default("manual"),
+  lastPushedAt: timestamp("last_pushed_at"),
+  pushStatus: mysqlEnum("push_status", ["synced", "pending", "error", "not_pushed"]).default("not_pushed"),
+  pushError: text("push_error"),
   // Notes
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -542,3 +548,20 @@ export const ownerNotifications = mysqlTable("owner_notifications", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type OwnerNotification = typeof ownerNotifications.$inferSelect;
+
+// ─── Marketing Photos ──────────────────────────────────────────────────────────
+export const marketingPhotos = mysqlTable("marketing_photos", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("property_id").notNull(),
+  inspectionId: int("inspection_id"),
+  // Storage
+  url: text("url").notNull(),          // /manus-storage/... path
+  storageKey: varchar("storage_key", { length: 512 }).notNull(),
+  // Metadata
+  style: varchar("style", { length: 64 }).notNull().default("professional"),  // e.g. "living_room", "exterior", "kitchen"
+  roomLabel: varchar("room_label", { length: 128 }),  // human-readable label e.g. "Living Room"
+  prompt: text("prompt"),              // the prompt used to generate
+  // Timestamps
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MarketingPhoto = typeof marketingPhotos.$inferSelect;

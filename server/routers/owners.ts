@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
-import { owners, ownerProperties, ownerNotifications, properties } from "../../drizzle/schema";
+import { owners, ownerProperties, ownerNotifications, properties, integrationConfigs } from "../../drizzle/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import crypto from "crypto";
 
@@ -280,6 +280,90 @@ export const ownersRouter = router({
         .set({ pmStatus: "sent", sentAt: new Date() })
         .where(eq(ownerNotifications.id, input.notificationId));
       return { success: true };
+    }),
+
+  // ── Push owner data to connected CRM ────────────────────────────────────────
+  pushToCrm: protectedProcedure
+    .input(z.object({
+      ownerId: z.number(),
+      platform: z.enum(["palace", "console", "propertytree", "rest", "standalone"]),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      const [owner] = await db.select().from(owners).where(eq(owners.id, input.ownerId)).limit(1);
+      if (!owner) throw new Error("Owner not found");
+
+      if (input.platform === "standalone") {
+        await db.update(owners).set({
+          platformSource: "standalone",
+          pushStatus: "synced",
+          lastPushedAt: new Date(),
+          pushError: null,
+        }).where(eq(owners.id, input.ownerId));
+        return { success: true, message: "Marked as standalone — no external CRM push required" };
+      }
+
+      // Check integration config
+      const integrationRows = await db.select().from(integrationConfigs)
+        .where(eq(integrationConfigs.platform, input.platform as any))
+        .limit(1);
+
+      if (!integrationRows.length || !integrationRows[0].apiEndpoint) {
+        await db.update(owners).set({
+          platformSource: input.platform as any,
+          pushStatus: "pending",
+          pushError: `${input.platform} integration not configured. Set it up in Integrations.`,
+        }).where(eq(owners.id, input.ownerId));
+        throw new Error(`${input.platform.charAt(0).toUpperCase() + input.platform.slice(1)} integration is not configured. Please set up the connection in Integrations first.`);
+      }
+
+      // Attempt push
+      try {
+        const config = integrationRows[0];
+        const payload = {
+          name: owner.name,
+          entity_type: owner.entityType,
+          email: owner.email,
+          phone: owner.phone,
+          mailing_address: owner.mailingAddress,
+          preferred_contact: owner.preferredContact,
+          platform_ref: owner.platformRef,
+        };
+
+        const response = await fetch(`${config.apiEndpoint}/owners`, {
+          method: owner.platformRef ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}),
+          },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(10000),
+        });
+
+        if (!response.ok) throw new Error(`CRM returned ${response.status} ${response.statusText}`);
+
+        const result = await response.json().catch(() => ({}));
+        const crmId = (result as any)?.id || (result as any)?.owner_id || owner.platformRef;
+
+        await db.update(owners).set({
+          platformSource: input.platform as any,
+          platformRef: crmId ? String(crmId) : owner.platformRef,
+          pushStatus: "synced",
+          lastPushedAt: new Date(),
+          pushError: null,
+        }).where(eq(owners.id, input.ownerId));
+
+        return { success: true, message: `Successfully pushed to ${input.platform}` };
+      } catch (err: any) {
+        await db.update(owners).set({
+          platformSource: input.platform as any,
+          pushStatus: "error",
+          pushError: err.message,
+        }).where(eq(owners.id, input.ownerId));
+        throw new Error(`Push failed: ${err.message}`);
+      }
     }),
 
   // ── Update landlord approval status (for maintenance items) ──────────────

@@ -1,4 +1,4 @@
-import { useState } from "react";
+content = r'''import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -504,3 +504,8 @@ export default function Owners() {
     </DashboardLayout>
   );
 }
+'''
+
+with open('/home/ubuntu/inspect360/client/src/pages/Owners.tsx', 'w') as f:
+    f.write(content)
+print("Done")
