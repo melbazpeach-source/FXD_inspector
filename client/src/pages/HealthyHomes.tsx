@@ -74,6 +74,11 @@ export default function HealthyHomes() {
   const [isRunningAgent, setIsRunningAgent] = useState(false);
 
   const propertiesQuery = trpc.properties.list.useQuery();
+  const assessmentQuery = trpc.healthyHomes.getByProperty.useQuery(
+    { propertyId: selectedPropertyId! },
+    { enabled: !!selectedPropertyId }
+  );
+  const assessment = assessmentQuery.data as any;
 
   const getStatusColor = (status: AssessmentStatus) => {
     switch (status) {
@@ -469,6 +474,59 @@ export default function HealthyHomes() {
                             Apply Exemption
                           </Button>
                         </div>
+
+                        {/* Heating kW display — only shown for heating standard */}
+                        {standard.id === "heating" && assessment && (
+                          <div
+                            className="rounded-sm p-5 border"
+                            style={{ background: "var(--black)", borderColor: "var(--black)" }}
+                          >
+                            <div className="font-archivo text-xs mb-4 flex items-center gap-1.5" style={{ color: "var(--pink)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                              <Thermometer size={12} />
+                              Heating Capacity Assessment
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                              <div className="text-center">
+                                <div className="font-archivo text-xs mb-1" style={{ color: "rgba(255,255,255,0.5)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Actual Capacity</div>
+                                <div className="font-anton text-5xl" style={{ color: "var(--pink)", lineHeight: 1 }}>
+                                  {assessment.heatingCapacityKw ?? "—"}
+                                </div>
+                                <div className="font-archivo text-lg font-bold mt-1" style={{ color: "rgba(255,255,255,0.7)" }}>kW</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-archivo text-xs mb-1" style={{ color: "rgba(255,255,255,0.5)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Required Min.</div>
+                                <div className="font-anton text-5xl" style={{ color: "var(--yellow)", lineHeight: 1 }}>
+                                  {assessment.heatingRequiredKw ?? "—"}
+                                </div>
+                                <div className="font-archivo text-lg font-bold mt-1" style={{ color: "rgba(255,255,255,0.7)" }}>kW</div>
+                              </div>
+                            </div>
+                            {assessment.heatingDeviceType && (
+                              <div className="text-center mb-3">
+                                <span className="font-archivo text-sm font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>{assessment.heatingDeviceType}</span>
+                              </div>
+                            )}
+                            {assessment.heatingCapacityKw && assessment.heatingRequiredKw && (
+                              <div
+                                className="flex items-center justify-center gap-2 p-2 rounded-sm"
+                                style={{
+                                  background: parseFloat(assessment.heatingCapacityKw) >= parseFloat(assessment.heatingRequiredKw)
+                                    ? "rgba(16,185,129,0.15)" : "rgba(255,45,135,0.15)",
+                                  border: `1px solid ${parseFloat(assessment.heatingCapacityKw) >= parseFloat(assessment.heatingRequiredKw) ? "rgba(16,185,129,0.4)" : "rgba(255,45,135,0.4)"}`
+                                }}
+                              >
+                                {parseFloat(assessment.heatingCapacityKw) >= parseFloat(assessment.heatingRequiredKw) ? (
+                                  <><CheckCircle2 size={14} style={{ color: "#10b981" }} /><span className="font-archivo text-xs font-bold" style={{ color: "#10b981", letterSpacing: "0.08em", textTransform: "uppercase" }}>Exceeds requirement by {(parseFloat(assessment.heatingCapacityKw) - parseFloat(assessment.heatingRequiredKw)).toFixed(1)} kW</span></>
+                                ) : (
+                                  <><XCircle size={14} style={{ color: "var(--pink)" }} /><span className="font-archivo text-xs font-bold" style={{ color: "var(--pink)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Undersized by {(parseFloat(assessment.heatingRequiredKw) - parseFloat(assessment.heatingCapacityKw)).toFixed(1)} kW</span></>
+                                )}
+                              </div>
+                            )}
+                            {assessment.heatingNotes && (
+                              <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>{assessment.heatingNotes}</p>
+                            )}
+                          </div>
+                        )}
 
                         {/* Status display */}
                         {status && (
