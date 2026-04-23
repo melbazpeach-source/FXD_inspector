@@ -119,6 +119,16 @@ export default function Dashboard() {
       : overdue;
 
   function handleStartInspection(appt: any) {
+    // If the appointment already has an inspection, navigate directly to it
+    if (appt.appointment.inspectionId) {
+      setLocation(`/inspections/${appt.appointment.inspectionId}`);
+      return;
+    }
+    // If completed without inspection ID, just navigate to properties
+    if (appt.appointment.status === 'completed') {
+      toast.info('Inspection already completed.');
+      return;
+    }
     setSelectedAppointment(appt);
     setTypeDialogOpen(true);
   }
@@ -334,7 +344,9 @@ export default function Dashboard() {
                   )}
                   <div className="ml-auto flex items-center gap-1 text-primary text-xs font-medium group-hover:gap-2 transition-all">
                     <Sparkles className="h-3.5 w-3.5" />
-                    Start inspection
+                    {appointment.inspectionId || appointment.status === 'completed' || appointment.status === 'in_progress'
+                      ? 'View inspection'
+                      : 'Start inspection'}
                     <ChevronRight className="h-3.5 w-3.5" />
                   </div>
                 </div>

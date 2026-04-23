@@ -237,9 +237,25 @@ Respond in JSON format:
       const db = await getDb();
       if (!db) return [];
       return db
-        .select()
+        .select({
+          id: pmReviewQueue.id,
+          inspectionId: pmReviewQueue.inspectionId,
+          propertyId: pmReviewQueue.propertyId,
+          status: pmReviewQueue.status,
+          tenantLetterDraft: pmReviewQueue.tenantLetterDraft,
+          tenantLetterApproved: pmReviewQueue.tenantLetterApproved,
+          maintenanceRequestsCreated: pmReviewQueue.maintenanceRequestsCreated,
+          maintenanceRequestCount: pmReviewQueue.maintenanceRequestCount,
+          pdfReportReady: pmReviewQueue.pdfReportReady,
+          agentNotes: pmReviewQueue.agentNotes,
+          createdAt: pmReviewQueue.createdAt,
+          updatedAt: pmReviewQueue.updatedAt,
+          propertyAddress: properties.address,
+          propertySuburb: properties.suburb,
+          propertyCity: properties.city,
+        })
         .from(pmReviewQueue)
-        .where(eq(pmReviewQueue.status, "pending"))
+        .leftJoin(properties, eq(pmReviewQueue.propertyId, properties.id))
         .orderBy(desc(pmReviewQueue.createdAt));
     }),
 

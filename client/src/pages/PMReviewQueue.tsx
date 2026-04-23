@@ -56,9 +56,10 @@ export default function PMReviewQueue() {
   };
 
   const renderQueueItem = (item: any, showActions: boolean) => {
-    const config = ITEM_TYPE_CONFIG[item.itemType] || { label: item.itemType, color: "var(--muted)", icon: FileText };
-    const Icon = config.icon;
     const isExpanded = expandedItem === item.id;
+    const hasLetter = !!item.tenantLetterDraft;
+    const hasMaintenance = item.maintenanceRequestCount > 0;
+    const fullAddress = [item.propertyAddress, item.propertySuburb, item.propertyCity].filter(Boolean).join(", ");
 
     return (
       <div
@@ -70,29 +71,27 @@ export default function PMReviewQueue() {
           className="flex items-center gap-4 p-4 cursor-pointer"
           onClick={() => setExpandedItem(isExpanded ? null : item.id)}
         >
-          <div className="w-9 h-9 rounded-sm flex items-center justify-center flex-shrink-0" style={{ background: `${config.color}15` }}>
-            <Icon size={16} style={{ color: config.color }} />
+          <div className="w-9 h-9 rounded-sm flex items-center justify-center flex-shrink-0" style={{ background: "rgba(99,102,241,0.1)" }}>
+            <FileText size={16} style={{ color: "#6366f1" }} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
               <span className="font-archivo text-sm font-bold" style={{ color: "var(--ink)", letterSpacing: "0.02em" }}>
-                {item.title || config.label}
+                {fullAddress || "Property"}
               </span>
-              <Badge
-                className="font-archivo text-xs px-2 py-0.5"
-                style={{
-                  background: `${config.color}15`,
-                  color: config.color,
-                  border: `1px solid ${config.color}30`,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {config.label}
-              </Badge>
+              {hasLetter && (
+                <Badge className="font-archivo text-xs px-2 py-0.5" style={{ background: "rgba(99,102,241,0.1)", color: "#6366f1", border: "1px solid rgba(99,102,241,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  <Mail size={9} className="mr-1" /> Tenant Letter
+                </Badge>
+              )}
+              {hasMaintenance && (
+                <Badge className="font-archivo text-xs px-2 py-0.5" style={{ background: "rgba(255,45,135,0.1)", color: "var(--pink)", border: "1px solid rgba(255,45,135,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  <Wrench size={9} className="mr-1" /> {item.maintenanceRequestCount} Maintenance
+                </Badge>
+              )}
             </div>
             <div className="text-sm" style={{ color: "var(--muted)" }}>
-              {item.propertyAddress || "Property"} · {new Date(item.createdAt).toLocaleDateString("en-NZ", { day: "numeric", month: "short" })}
+              Inspection #{item.inspectionId} · {new Date(item.createdAt).toLocaleDateString("en-NZ", { day: "numeric", month: "short" })}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -120,22 +119,37 @@ export default function PMReviewQueue() {
 
         {isExpanded && (
           <div className="px-4 pb-4 border-t" style={{ borderColor: "var(--border)" }}>
-            {/* Content preview */}
-            {item.content && (
+            {/* Agent notes */}
+            {item.agentNotes && (
               <div className="mt-4">
                 <div className="font-archivo text-xs mb-2" style={{ color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  AI Draft Content
+                  Fixx Agent Summary
                 </div>
                 <div
-                  className="rounded-sm p-4 text-sm font-mono"
-                  style={{ background: "var(--cream)", color: "var(--ink)", lineHeight: 1.7, whiteSpace: "pre-wrap", maxHeight: 300, overflowY: "auto" }}
+                  className="rounded-sm p-4 text-sm"
+                  style={{ background: "rgba(99,102,241,0.06)", color: "var(--ink)", lineHeight: 1.7, borderLeft: "3px solid #6366f1" }}
                 >
-                  {item.content}
+                  {item.agentNotes}
                 </div>
               </div>
             )}
 
-            {/* PM Notes */}
+            {/* Tenant letter draft */}
+            {item.tenantLetterDraft && (
+              <div className="mt-4">
+                <div className="font-archivo text-xs mb-2" style={{ color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  AI-Drafted Tenant Letter
+                </div>
+                <div
+                  className="rounded-sm p-4 text-sm"
+                  style={{ background: "var(--cream)", color: "var(--ink)", lineHeight: 1.7, whiteSpace: "pre-wrap", maxHeight: 300, overflowY: "auto" }}
+                >
+                  {item.tenantLetterDraft}
+                </div>
+              </div>
+            )}
+
+            {/* PM Notes input */}
             {showActions && (
               <div className="mt-4">
                 <div className="font-archivo text-xs mb-2" style={{ color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
@@ -173,14 +187,6 @@ export default function PMReviewQueue() {
                   <XCircle size={12} />
                   Reject
                 </Button>
-              </div>
-            )}
-
-            {/* PM Notes display for approved/rejected */}
-            {!showActions && item.pmNotes && (
-              <div className="mt-4 p-3 rounded-sm" style={{ background: "var(--cream)" }}>
-                <div className="font-archivo text-xs mb-1" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>PM Notes</div>
-                <p className="text-sm" style={{ color: "var(--ink)" }}>{item.pmNotes}</p>
               </div>
             )}
           </div>

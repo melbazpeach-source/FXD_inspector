@@ -132,10 +132,10 @@ export default function RentalAppraisal() {
                 </div>
                 <div className="flex items-end gap-4 mb-4">
                   <div className="font-anton text-5xl" style={{ color: "var(--yellow)", letterSpacing: "0.01em" }}>
-                    {appraisal.recommendedRentMin && appraisal.recommendedRentMax
-                      ? `$${appraisal.recommendedRentMin}–$${appraisal.recommendedRentMax}`
-                      : appraisal.recommendedRent
-                        ? `$${appraisal.recommendedRent}`
+                    {appraisal.recommendedRentLow && appraisal.recommendedRentHigh
+                      ? `${appraisal.recommendedRentLow}–${appraisal.recommendedRentHigh}`
+                      : appraisal.recommendedRentLow
+                        ? `${appraisal.recommendedRentLow}`
                         : "—"}
                   </div>
                   <div className="font-archivo text-sm mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>/ week</div>
@@ -143,9 +143,9 @@ export default function RentalAppraisal() {
                 {appraisal.currentRent && (
                   <div className="flex items-center gap-2">
                     <span className="font-archivo text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
-                      Current: ${appraisal.currentRent}/wk
+                      Current: {appraisal.currentRent}
                     </span>
-                    {appraisal.recommendedRentMin && appraisal.currentRent < appraisal.recommendedRentMin && (
+                    {appraisal.recommendedRentLow && Number(appraisal.currentRent?.replace(/[^0-9]/g, '')) < Number(appraisal.recommendedRentLow?.replace(/[^0-9]/g, '')) && (
                       <Badge className="font-archivo text-xs px-2 py-0.5" style={{ background: "rgba(255,212,0,0.2)", color: "var(--yellow)", border: "1px solid rgba(255,212,0,0.3)", letterSpacing: "0.08em" }}>
                         <ArrowUpRight size={10} className="mr-1" />
                         Uplift Available
@@ -155,21 +155,28 @@ export default function RentalAppraisal() {
                 )}
               </div>
 
-              {/* Market position */}
-              {appraisal.marketPosition && (
+              {/* Market position / comparable analysis */}
+              {(appraisal.comparableAnalysis || appraisal.marketSentiment) && (
                 <div className="rounded-sm p-5 border" style={{ background: "var(--white)", borderColor: "var(--border)" }}>
                   <div className="flex items-center gap-2 mb-3">
                     <BarChart2 size={16} style={{ color: "var(--pink)" }} />
                     <h3 className="font-archivo text-sm font-bold" style={{ color: "var(--ink)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                      Market Position
+                      Market Analysis
                     </h3>
+                    {appraisal.marketSentiment && (
+                      <span className="ml-auto font-archivo text-xs px-2 py-0.5 rounded-sm" style={{
+                        background: appraisal.marketSentiment === 'rising' ? 'rgba(16,185,129,0.1)' : appraisal.marketSentiment === 'softening' ? 'rgba(239,68,68,0.1)' : 'rgba(0,0,0,0.06)',
+                        color: appraisal.marketSentiment === 'rising' ? '#10b981' : appraisal.marketSentiment === 'softening' ? '#ef4444' : 'var(--muted)',
+                        letterSpacing: '0.08em', textTransform: 'uppercase'
+                      }}>{appraisal.marketSentiment}</span>
+                    )}
                   </div>
-                  <p className="text-sm" style={{ color: "var(--ink)", lineHeight: 1.7 }}>{appraisal.marketPosition}</p>
+                  {appraisal.comparableAnalysis && <p className="text-sm" style={{ color: "var(--ink)", lineHeight: 1.7 }}>{appraisal.comparableAnalysis}</p>}
                 </div>
               )}
 
-              {/* Suburb stats */}
-              {(appraisal.suburbMedian || appraisal.suburbRange) && (
+              {/* Suburb / market stats */}
+              {(appraisal.marketMedian || appraisal.vacancyRate) && (
                 <div className="rounded-sm p-5 border" style={{ background: "var(--white)", borderColor: "var(--border)" }}>
                   <div className="flex items-center gap-2 mb-3">
                     <MapPin size={16} style={{ color: "var(--pink)" }} />
@@ -178,52 +185,52 @@ export default function RentalAppraisal() {
                     </h3>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    {appraisal.suburbMedian && (
+                    {appraisal.marketMedian && (
                       <div>
-                        <div className="font-archivo text-xs mb-1" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Median Rent</div>
-                        <div className="font-anton text-xl" style={{ color: "var(--ink)" }}>${appraisal.suburbMedian}/wk</div>
+                        <div className="font-archivo text-xs mb-1" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Market Median</div>
+                        <div className="font-anton text-xl" style={{ color: "var(--ink)" }}>{appraisal.marketMedian}</div>
                       </div>
                     )}
-                    {appraisal.suburbRange && (
+                    {appraisal.vacancyRate && (
                       <div>
-                        <div className="font-archivo text-xs mb-1" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Market Range</div>
-                        <div className="font-anton text-xl" style={{ color: "var(--ink)" }}>{appraisal.suburbRange}</div>
+                        <div className="font-archivo text-xs mb-1" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Vacancy Rate</div>
+                        <div className="font-anton text-xl" style={{ color: "var(--ink)" }}>{appraisal.vacancyRate}</div>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Condition impact */}
-              {appraisal.conditionImpact && (
+              {/* Condition premium/discount */}
+              {appraisal.conditionPremiumDiscount && (
                 <div className="rounded-sm p-5 border" style={{ background: "var(--white)", borderColor: "var(--border)" }}>
                   <div className="flex items-center gap-2 mb-3">
                     <Star size={16} style={{ color: "var(--pink)" }} />
                     <h3 className="font-archivo text-sm font-bold" style={{ color: "var(--ink)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                      Condition Assessment
+                      Condition Premium / Discount
                     </h3>
                   </div>
-                  <p className="text-sm" style={{ color: "var(--ink)", lineHeight: 1.7 }}>{appraisal.conditionImpact}</p>
+                  <p className="text-sm" style={{ color: "var(--ink)", lineHeight: 1.7 }}>{appraisal.conditionPremiumDiscount}</p>
                 </div>
               )}
 
-              {/* Full narrative */}
-              {appraisal.fullNarrative && (
+              {/* Full AI draft report */}
+              {appraisal.aiDraftReport && (
                 <div className="rounded-sm p-5 border" style={{ background: "var(--white)", borderColor: "var(--border)" }}>
                   <div className="flex items-center gap-2 mb-3">
                     <FileText size={16} style={{ color: "var(--pink)" }} />
                     <h3 className="font-archivo text-sm font-bold" style={{ color: "var(--ink)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                      Full Appraisal
+                      Full Appraisal Report
                     </h3>
                   </div>
-                  <p className="text-sm" style={{ color: "var(--ink)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{appraisal.fullNarrative}</p>
+                  <p className="text-sm" style={{ color: "var(--ink)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{appraisal.aiDraftReport}</p>
                 </div>
               )}
 
-              {/* Generated date */}
-              {appraisal.generatedAt && (
+              {/* Created date */}
+              {appraisal.createdAt && (
                 <p className="text-xs text-center" style={{ color: "var(--muted-light)" }}>
-                  Generated {new Date(appraisal.generatedAt).toLocaleDateString("en-NZ", { day: "numeric", month: "long", year: "numeric" })}
+                  Generated {new Date(appraisal.createdAt).toLocaleDateString("en-NZ", { day: "numeric", month: "long", year: "numeric" })}
                 </p>
               )}
             </div>
