@@ -21,7 +21,9 @@ import MaintenancePlan from "./pages/MaintenancePlan";
 import RentalAppraisal from "./pages/RentalAppraisal";
 import PMReviewQueue from "./pages/PMReviewQueue";
 import ImprovementRecommendations from "./pages/ImprovementRecommendations";
-import SmokeAlarms from "./pages/SmokeAlarms";
+import SmokeAlarms from "@/pages/SmokeAlarms";
+import Owners from "@/pages/Owners";
+import LandlordPortal from "@/pages/LandlordPortal";
 
 function withLayout(Component: React.ComponentType<any>, props?: any) {
   return () => (
@@ -76,7 +78,9 @@ function AppRoutes() {
       <Route path="/inventory" component={withLayout(Inventory)} />
 
       {/* Smoke Alarms */}
-      <Route path="/smoke-alarms" component={withLayout(SmokeAlarms)} />
+      <Route path="/smoke-alarms" component={SmokeAlarms} />
+      <Route path="/owners" component={Owners} />
+      <Route path="/landlord-portal" component={LandlordPortal} />
       {/* Healthy Homes */}
       <Route path="/healthy-homes" component={withLayout(HealthyHomes)} />
 

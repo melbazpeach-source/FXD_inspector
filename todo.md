@@ -682,3 +682,22 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 - [x] Integrate smoke alarm check into Healthy Homes assessment
 - [x] Add smoke alarm demo data for 14 Rata Street
 - [x] Write vitest tests for smoke alarm procedures
+
+## Owner / Landlord Module
+- [ ] Add owners table to drizzle/schema.ts (name, entity type, email, phone, address, notes)
+- [ ] Add owner_id foreign key to properties table
+- [ ] Generate migration SQL and apply
+- [ ] Build owners tRPC router (list, create, update, delete, getByProperty)
+- [ ] Build Owners management page for PMs (CRUD, link to properties)
+- [ ] Add Owners to DashboardLayout sidebar nav
+- [ ] Build landlord portal view (property dashboard, inspection summaries, traffic-light status)
+- [ ] Build maintenance approval workflow (cost estimates, approve/defer/discuss)
+- [ ] Build landlord report delivery page (rental appraisal, HH cert, maintenance plan, renovate recs)
+- [ ] Seed demo owner data for all 3 properties
+- [ ] Write vitest tests for owner procedures
+
+## PM Approval Before Sending to Landlord
+- [ ] Update owner_notifications status model: draft → pm_review → pm_approved → sent
+- [ ] Update owners router with pm_approve and send_to_owner procedures
+- [ ] Rebuild LandlordPortal UI: drafts queue, PM review panel, approve/edit/reject, then send
+- [ ] Seed demo data with correct draft/approved/sent statuses

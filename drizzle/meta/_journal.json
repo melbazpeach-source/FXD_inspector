@@ -36,6 +36,20 @@
       "when": 1776980624230,
       "tag": "0004_living_misty_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1776982149665,
+      "tag": "0005_nappy_lady_vermin",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1776982835162,
+      "tag": "0006_ordinary_butterfly",
+      "breakpoints": true
     }
   ]
 }

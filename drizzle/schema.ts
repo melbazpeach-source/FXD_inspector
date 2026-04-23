@@ -470,3 +470,75 @@ export const smokeAlarms = mysqlTable("smoke_alarms", {
 
 export type SmokeAlarm = typeof smokeAlarms.$inferSelect;
 export type InsertSmokeAlarm = typeof smokeAlarms.$inferInsert;
+
+// ─── Owners / Landlords ───────────────────────────────────────────────────────
+export const owners = mysqlTable("owners", {
+  id: int("id").autoincrement().primaryKey(),
+  // Identity
+  name: varchar("name", { length: 256 }).notNull(),
+  entityType: mysqlEnum("entity_type", ["individual", "company", "trust", "partnership"]).default("individual"),
+  companyName: varchar("company_name", { length: 256 }), // if entity_type = company/trust
+  // Contact
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 32 }),
+  alternatePhone: varchar("alternate_phone", { length: 32 }),
+  // Address
+  mailingAddress: text("mailing_address"),
+  // Preferences
+  preferredContact: mysqlEnum("preferred_contact", ["email", "phone", "sms", "portal"]).default("email"),
+  reportFrequency: mysqlEnum("report_frequency", ["after_each_inspection", "monthly", "quarterly"]).default("after_each_inspection"),
+  // Portal access
+  portalEnabled: boolean("portal_enabled").default(false),
+  portalToken: varchar("portal_token", { length: 128 }), // secure token for landlord portal login
+  // Notes
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Owner = typeof owners.$inferSelect;
+export type InsertOwner = typeof owners.$inferInsert;
+
+// ─── Owner ↔ Property link ────────────────────────────────────────────────────
+// One owner can own multiple properties; each property has one primary owner
+export const ownerProperties = mysqlTable("owner_properties", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("owner_id").notNull(),
+  propertyId: int("property_id").notNull(),
+  isPrimary: boolean("is_primary").default(true), // primary owner for this property
+  ownershipShare: int("ownership_share").default(100), // percentage (for joint ownership)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type OwnerProperty = typeof ownerProperties.$inferSelect;
+
+// ─── Landlord Notifications / Approvals ──────────────────────────────────────
+export const ownerNotifications = mysqlTable("owner_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("owner_id").notNull(),
+  propertyId: int("property_id").notNull(),
+  inspectionId: int("inspection_id"),
+  type: mysqlEnum("type", [
+    "inspection_complete",
+    "maintenance_approval",
+    "rent_appraisal",
+    "hh_compliance",
+    "maintenance_plan",
+    "renovate_recommendations",
+  ]).notNull(),
+  title: varchar("title", { length: 256 }).notNull(),
+  summary: text("summary"),
+  // For maintenance approvals
+  estimatedCost: varchar("estimated_cost", { length: 64 }),
+  approvalStatus: mysqlEnum("approval_status", ["pending", "approved", "deferred", "discuss"]).default("pending"),
+  approvalNote: text("approval_note"),
+  approvedAt: timestamp("approved_at"),
+  // PM workflow status: draft → pm_review → pm_approved → sent
+  pmStatus: mysqlEnum("pm_status", ["draft", "pm_review", "pm_approved", "sent"]).default("draft").notNull(),
+  pmNote: text("pm_note"),
+  pmApprovedAt: timestamp("pm_approved_at"),
+  // Delivery
+  sentAt: timestamp("sent_at"),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type OwnerNotification = typeof ownerNotifications.$inferSelect;

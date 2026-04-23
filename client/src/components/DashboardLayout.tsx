@@ -43,6 +43,7 @@ const NAV_GROUPS = [
       { icon: ShoppingBag, label: "Inventory",  href: "/inventory" },
       { icon: Flame,      label: "Smoke Alarms",  href: "/smoke-alarms", badge: "SA" },
       { icon: Shield,     label: "Healthy Homes", href: "/healthy-homes", badge: "HH" },
+      { icon: Users,      label: "Owners",         href: "/owners" },
     ],
   },
   {
@@ -57,6 +58,7 @@ const NAV_GROUPS = [
   {
     group: "System",
     items: [
+      { icon: Home,          label: "Landlord Portal", href: "/landlord-portal" },
       { icon: Globe,         label: "Integrations", href: "/integrations" },
       { icon: MessageSquare, label: "Fixx",         href: "/fixx", badge: "AI" },
       { icon: Settings,      label: "Settings",     href: "/settings" },
