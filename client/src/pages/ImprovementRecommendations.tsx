@@ -67,7 +67,7 @@ export default function ImprovementRecommendations() {
       {/* Philosophy banner */}
       <div className="rounded-sm p-5 mb-6" style={{ background: "var(--black)", color: "var(--white)" }}>
         <div className="font-archivo text-xs mb-2" style={{ color: "var(--yellow)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-          The Inspect360 Standard
+          The FXD Inspector Standard
         </div>
         <p className="text-sm" style={{ color: "rgba(255,255,255,0.8)", lineHeight: 1.7 }}>
           When you have access to one of the most capable analytical intelligences on the planet, you want to hear <strong style={{ color: "var(--yellow)" }}>everything</strong> it thinks. No hedging. No watered-down suggestions. Every observation, every opportunity, every recommendation — delivered with the confidence of an expert who has seen every property in the world and knows exactly what works.

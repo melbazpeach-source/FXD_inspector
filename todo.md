@@ -1,4 +1,4 @@
-# Inspect360 - Project TODO
+# FXD Inspector - Project TODO
 
 ## Database & Schema
 - [x] Properties table (address, landlord, tenants, platform refs)
@@ -291,8 +291,8 @@ Chattels are property-level — registered once, checked at EVERY inspection, co
 
 ## MagicPlan Integration (Room Measurement)
 - [ ] MagicPlan REST API connector — API Key + Customer ID via webdev_request_secrets
-- [ ] Deep linking: launch MagicPlan app from Inspect360 room view (pre-fills project/room name)
-- [ ] Webhook receiver: MagicPlan pushes completed floor plan data back to Inspect360
+- [ ] Deep linking: launch MagicPlan app from FXD Inspector room view (pre-fills project/room name)
+- [ ] Webhook receiver: MagicPlan pushes completed floor plan data back to FXD Inspector
 - [ ] Parse Plan Exchange XML: extract room name, floor area (m²), ceiling height, wall lengths, window/door dimensions
 - [ ] Auto-populate Healthy Homes compliance fields from MagicPlan data:
   - Room floor area → heating capacity calculation
@@ -460,7 +460,7 @@ TENANT APPEAL ASSESSMENT:
 - Excited about opportunities — the agent genuinely cares about this property's potential
 - Cites evidence from the photos — "I can see from the kitchen photo that..."
 
-## MagicPlan Floor Plan Output — Uses in Inspect360
+## MagicPlan Floor Plan Output — Uses in FXD Inspector
 
 MagicPlan produces a complete floor plan from the room scan. This unlocks several features:
 
@@ -564,7 +564,7 @@ The agent never makes the PM feel stupid for not knowing something.
 - [ ] Add "measurement confidence" field to all Healthy Homes numeric inputs (heating kW, insulation R-value, window area)
 - [ ] Show ± tolerance range on all measurements (e.g. "7.1 kW ± 0.3 kW" based on instrument precision)
 - [ ] Add "Previous Report Reference" field — inspector can enter the figure from an existing HH report for comparison
-- [ ] When variance between Inspect360 result and previous report is within 5%, show "Within acceptable tolerance — results are consistent"
+- [ ] When variance between FXD Inspector result and previous report is within 5%, show "Within acceptable tolerance — results are consistent"
 - [ ] When variance exceeds 5%, show "Variance noted — see methodology note" with explanation of why results may differ (measurement point, rounding, climate zone interpretation)
 - [ ] Add methodology transparency section to Assessment Report explaining measurement approach and acceptable variance ranges
 - [ ] Add "Instrument / Method Used" field for each measurement (e.g. "MagicPlan LiDAR scan", "Tape measure", "Manufacturer spec sheet", "Previous HH report")

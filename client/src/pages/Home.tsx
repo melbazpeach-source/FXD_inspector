@@ -42,7 +42,7 @@ export default function Home() {
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Zap className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-display font-semibold text-lg text-foreground">Inspect360</span>
+            <span className="font-display font-semibold text-lg text-foreground">FXD Inspector</span>
           </div>
           <Button
             onClick={() => { window.location.href = getLoginUrl(); }}
@@ -65,7 +65,7 @@ export default function Home() {
             <span className="text-accent">Reimagined</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Inspect360 combines AI-powered descriptions, 360° photography, voice-to-text, and
+            FXD Inspector combines AI-powered descriptions, 360° photography, voice-to-text, and
             seamless integrations with Palace, Console, and PropertyTree — all in one elegant platform.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -187,7 +187,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-border text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} Inspect360 — Professional Property Inspection Platform</p>
+        <p>© {new Date().getFullYear()} FXD Inspector — Professional Property Inspection Platform</p>
       </footer>
     </div>
   );

@@ -67,7 +67,7 @@ const PLATFORMS = [
     iconColor: "bg-amber-500",
     bgColor: "bg-amber-50 border-amber-200",
     fields: [
-      { key: "apiEndpoint", label: "Sandbox URL", placeholder: "https://sandbox.inspect360.io/api" },
+      { key: "apiEndpoint", label: "Sandbox URL", placeholder: "https://sandbox.fxdinspector.io/api" },
       { key: "apiKey", label: "Test Key", placeholder: "test_...", type: "password" },
     ],
   },
@@ -148,7 +148,7 @@ export default function Integrations() {
       <div className="mb-8">
         <h1 className="font-display text-3xl font-semibold text-foreground mb-1">Integrations</h1>
         <p className="text-muted-foreground text-sm">
-          Connect Inspect360 to your NZ property management platform to sync appointments and properties.
+          Connect FXD Inspector to your NZ property management platform to sync appointments and properties.
         </p>
       </div>
 
@@ -350,7 +350,7 @@ export default function Integrations() {
           <div>
             <p className="text-sm font-medium text-foreground mb-1">How sync works</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              When connected, Inspect360 automatically imports scheduled inspections as appointment tiles on your dashboard.
+              When connected, FXD Inspector automatically imports scheduled inspections as appointment tiles on your dashboard.
               Each appointment can be started as any inspection type. Completed reports can be pushed back to your platform.
               Webhooks enable real-time sync — configure the webhook URL above in your property management software.
             </p>

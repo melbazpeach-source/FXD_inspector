@@ -93,7 +93,7 @@ AI Description: ${roomDesc ? `Condition: ${roomDesc.condition ?? ""}. Points to 
       const primaryTenant = tenantList.find(t => t.isPrimary) ?? tenantList[0];
 
       // 3. Run the agent
-      const agentPrompt = `You are Fixx, the Inspect360 AI inspection agent. An inspector has just completed a ${inspectionType} inspection and you must now autonomously process the results.
+      const agentPrompt = `You are Fixx, the FXD Inspector AI inspection agent. An inspector has just completed a ${inspectionType} inspection and you must now autonomously process the results.
 
 PROPERTY: ${property?.address ?? "Unknown"}, ${property?.suburb ?? ""}, ${property?.city ?? ""}
 INSPECTION TYPE: ${inspectionType}
@@ -140,7 +140,7 @@ Respond in JSON format:
         messages: [
           {
             role: "system",
-            content: "You are Fixx, the Inspect360 AI inspection agent. You produce professional, accurate, tribunal-ready inspection outputs for the New Zealand property management market. You are objective, precise, and thorough. AI can draft, but it cannot decide — your outputs are always reviewed by a property manager before being sent.",
+            content: "You are Fixx, the FXD Inspector AI inspection agent. You produce professional, accurate, tribunal-ready inspection outputs for the New Zealand property management market. You are objective, precise, and thorough. AI can draft, but it cannot decide — your outputs are always reviewed by a property manager before being sent.",
           },
           { role: "user", content: agentPrompt },
         ],
@@ -327,7 +327,7 @@ Respond in JSON format:
         `Inspection ${i + 1} (${insp.completedAt ? new Date(insp.completedAt).toLocaleDateString("en-NZ") : "date unknown"}): Overall ${insp.overallCondition ?? "not rated"} - ${insp.generalNotes ?? ""}`
       ).join("\n");
 
-      const planPrompt = `You are Fixx, the Inspect360 AI maintenance planning agent. Based on the inspection history and chattels register for this property, generate a comprehensive 12-month proactive maintenance plan.
+      const planPrompt = `You are Fixx, the FXD Inspector AI maintenance planning agent. Based on the inspection history and chattels register for this property, generate a comprehensive 12-month proactive maintenance plan.
 
 PROPERTY: ${input.propertyAddress}
 
@@ -383,7 +383,7 @@ Respond in JSON format:
         messages: [
           {
             role: "system",
-            content: "You are Fixx, the Inspect360 AI maintenance planning agent. You produce practical, cost-conscious maintenance plans for New Zealand rental properties. Your recommendations are based on evidence from inspection history and industry-standard asset lifespans.",
+            content: "You are Fixx, the FXD Inspector AI maintenance planning agent. You produce practical, cost-conscious maintenance plans for New Zealand rental properties. Your recommendations are based on evidence from inspection history and industry-standard asset lifespans.",
           },
           { role: "user", content: planPrompt },
         ],
@@ -528,7 +528,7 @@ Respond in JSON format:
         .map(c => `${c.name}: ${c.currentCondition}`)
         .join(", ");
 
-      const appraisalPrompt = `You are Fixx, the Inspect360 AI rental appraisal agent. Generate a comprehensive rental appraisal for this New Zealand property.
+      const appraisalPrompt = `You are Fixx, the FXD Inspector AI rental appraisal agent. Generate a comprehensive rental appraisal for this New Zealand property.
 
 PROPERTY: ${property.address}, ${property.suburb ?? ""}, ${property.city ?? ""}
 CURRENT RENT: ${input.currentRent ?? "Not provided"}
@@ -562,7 +562,7 @@ Respond in JSON format:
         messages: [
           {
             role: "system",
-            content: "You are Fixx, the Inspect360 AI rental appraisal agent. You produce professional rental appraisals for the New Zealand property management market. Your appraisals are evidence-based, market-aware, and clearly caveated as indicative estimates requiring PM verification.",
+            content: "You are Fixx, the FXD Inspector AI rental appraisal agent. You produce professional rental appraisals for the New Zealand property management market. Your appraisals are evidence-based, market-aware, and clearly caveated as indicative estimates requiring PM verification.",
           },
           { role: "user", content: appraisalPrompt },
         ],
@@ -660,7 +660,7 @@ Respond in JSON format:
         messages: [
           {
             role: "system",
-            content: `You are Fixx, the Inspect360 AI assistant — a knowledgeable, professional, and slightly witty property inspection expert for the New Zealand market. You help property managers and inspectors with:
+            content: `You are Fixx, the FXD Inspector AI assistant — a knowledgeable, professional, and slightly witty property inspection expert for the New Zealand market. You help property managers and inspectors with:
 - Inspection questions and guidance
 - NZ tenancy law and Healthy Homes Standards
 - Maintenance advice and cost estimates

@@ -39,7 +39,7 @@ export default function FixxChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: `**Kia ora! I'm Fixx** — your Inspect360 AI assistant, trained on NZ tenancy law, Healthy Homes Standards, and property management best practice.\n\nI can help you with:\n- **Tenancy law questions** — RTA 1986, notice periods, rights and obligations\n- **Healthy Homes compliance** — standards, deadlines, assessment guidance\n- **Inspection guidance** — what to look for, how to document, tribunal-ready language\n- **Maintenance advice** — cost estimates, urgency assessment, contractor briefing\n- **Report drafting** — tenant letters, landlord briefs, tribunal evidence\n\nRemember: *AI can draft, but it cannot decide.* Always verify legal matters with a professional.\n\nWhat can I help you with today?`,
+      content: `**Kia ora! I'm Fixx** — your FXD Inspector AI assistant, trained on NZ tenancy law, Healthy Homes Standards, and property management best practice.\n\nI can help you with:\n- **Tenancy law questions** — RTA 1986, notice periods, rights and obligations\n- **Healthy Homes compliance** — standards, deadlines, assessment guidance\n- **Inspection guidance** — what to look for, how to document, tribunal-ready language\n- **Maintenance advice** — cost estimates, urgency assessment, contractor briefing\n- **Report drafting** — tenant letters, landlord briefs, tribunal evidence\n\nRemember: *AI can draft, but it cannot decide.* Always verify legal matters with a professional.\n\nWhat can I help you with today?`,
       timestamp: new Date(),
     },
   ]);

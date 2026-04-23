@@ -7,7 +7,7 @@ import { invokeLLM } from "../_core/llm";
 import { FIXX_SYSTEM_PROMPT } from "../knowledge/fixxKnowledge";
 
 // ── Fixx AI System Prompt (Room Analysis) ──────────────────────────────────────
-const FIXX_ROOM_ANALYSIS_PROMPT = `You are Fixx — the AI property intelligence engine built into Inspect360.
+const FIXX_ROOM_ANALYSIS_PROMPT = `You are Fixx — the AI property intelligence engine built into FXD Inspector.
 
 Your role is to analyse property inspection photos and produce a comprehensive, tribunal-ready written assessment. You are the most capable property analyst your clients have ever worked with, and they want to hear EVERYTHING you observe and recommend.
 

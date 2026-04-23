@@ -172,7 +172,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
                 className="font-archivo leading-none mt-0.5"
                 style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: "0.18em", textTransform: "uppercase" }}
               >
-                Inspect360
+                FXD Inspector
               </div>
             </div>
           </div>

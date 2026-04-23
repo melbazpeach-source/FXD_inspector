@@ -16,7 +16,7 @@ function createAuthContext(overrides?: Partial<AuthenticatedUser>): {
   const user: AuthenticatedUser = {
     id: 1,
     openId: "test-user-001",
-    email: "pm@inspect360.co.nz",
+    email: "pm@fxd-inspector.co.nz",
     name: "Sarah Mitchell",
     loginMethod: "manus",
     role: "user",
