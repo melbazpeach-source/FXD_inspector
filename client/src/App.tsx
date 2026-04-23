@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import InspectionDetail from "./pages/InspectionDetail";
+import InspectionsList from "./pages/InspectionsList";
 import InspectionRoom from "./pages/InspectionRoom";
 import Properties from "./pages/Properties";
 import Integrations from "./pages/Integrations";
@@ -44,6 +45,7 @@ function AppRoutes() {
       <Route path="/dashboard" component={withLayout(Dashboard)} />
 
       {/* Inspections */}
+      <Route path="/inspections" component={withLayout(InspectionsList)} />
       <Route path="/inspections/:id">
         {(params) => (
           <DashboardLayout>
@@ -78,7 +80,7 @@ function AppRoutes() {
       <Route path="/inventory" component={withLayout(Inventory)} />
 
       {/* Smoke Alarms */}
-      <Route path="/smoke-alarms" component={SmokeAlarms} />
+      <Route path="/smoke-alarms" component={withLayout(SmokeAlarms)} />
       <Route path="/owners" component={Owners} />
       <Route path="/landlord-portal" component={LandlordPortal} />
       {/* Healthy Homes */}

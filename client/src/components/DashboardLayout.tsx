@@ -34,6 +34,7 @@ const NAV_GROUPS = [
       { icon: ClipboardList, label: "Inspections",   href: "/inspections" },
       { icon: Building2,     label: "Properties",    href: "/properties" },
       { icon: CheckSquare,   label: "Review Queue",  href: "/review-queue", badge: "PM" },
+      { icon: Users,         label: "Landlord Portal", href: "/landlord-portal", badge: "LL" },
     ],
   },
   {
@@ -58,7 +59,6 @@ const NAV_GROUPS = [
   {
     group: "System",
     items: [
-      { icon: Home,          label: "Landlord Portal", href: "/landlord-portal" },
       { icon: Globe,         label: "Integrations", href: "/integrations" },
       { icon: MessageSquare, label: "Fixx",         href: "/fixx", badge: "AI" },
       { icon: Settings,      label: "Settings",     href: "/settings" },
