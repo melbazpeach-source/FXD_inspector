@@ -701,3 +701,4 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 - [ ] Update owners router with pm_approve and send_to_owner procedures
 - [ ] Rebuild LandlordPortal UI: drafts queue, PM review panel, approve/edit/reject, then send
 - [ ] Seed demo data with correct draft/approved/sent statuses
+- [ ] Make Landlord Portal responsive (mobile-first, collapsible owner list, stacked tabs)
