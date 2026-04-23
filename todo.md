@@ -645,3 +645,14 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 - [ ] Sample data pre-loaded (demo property, demo inspection, demo AI output)
 - [ ] Designed for presentation — large text, clear hierarchy, impressive visual impact
 - [ ] Exportable as a single .html file for email/USB distribution
+
+## Transferable Self-Hosted Build
+- [ ] Production build (pnpm build)
+- [ ] Dockerfile (Node 22, multi-stage, production-optimised)
+- [ ] docker-compose.yml (app + MySQL + optional reverse proxy)
+- [ ] .env.example with all required variables documented
+- [ ] Deployment guide (DEPLOYMENT.md) covering VPS, Docker, Nginx, SSL
+- [ ] Database migration script for fresh installs
+- [ ] Health check endpoint
+- [ ] Exportable ZIP package
+- [ ] Standalone pitch demo HTML file
