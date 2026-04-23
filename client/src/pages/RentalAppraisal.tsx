@@ -5,12 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   TrendingUp, Building2, ChevronRight, Zap, DollarSign,
-  BarChart2, MapPin, Star, ArrowUpRight, FileText
+  BarChart2, MapPin, Star, ArrowUpRight, FileText, Camera, Download, RefreshCw, Sparkles
 } from "lucide-react";
 
 export default function RentalAppraisal() {
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingPhotos, setIsGeneratingPhotos] = useState(false);
 
   const propertiesQuery = trpc.properties.list.useQuery();
   const appraisalQuery = trpc.agent.getAppraisals.useQuery(
@@ -37,6 +38,30 @@ export default function RentalAppraisal() {
       propertyId: selectedPropertyId,
     });
   };
+
+  const marketingPhotosQuery = trpc.marketingPhotos.list.useQuery(
+    { propertyId: selectedPropertyId! },
+    { enabled: !!selectedPropertyId }
+  );
+  const generatePhotosMutation = trpc.marketingPhotos.generate.useMutation({
+    onSuccess: () => {
+      marketingPhotosQuery.refetch();
+      setIsGeneratingPhotos(false);
+      toast.success("Marketing photos generated! 📸");
+    },
+    onError: (e) => {
+      setIsGeneratingPhotos(false);
+      toast.error(e.message || "Failed to generate photos");
+    },
+  });
+
+  const handleGeneratePhotos = () => {
+    if (!selectedPropertyId) return;
+    setIsGeneratingPhotos(true);
+    generatePhotosMutation.mutate({ propertyId: selectedPropertyId });
+  };
+
+  const marketingPhotos = (marketingPhotosQuery.data as any[]) || [];
 
   const appraisals = (appraisalQuery.data as any[]) || [];
   const appraisal = appraisals[0] as any;
@@ -226,6 +251,68 @@ export default function RentalAppraisal() {
                   <p className="text-sm" style={{ color: "var(--ink)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{appraisal.aiDraftReport}</p>
                 </div>
               )}
+
+              {/* Marketing Photos */}
+              <div className="rounded-sm p-5 border" style={{ background: "var(--black)", borderColor: "var(--black)" }}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Camera size={16} style={{ color: "var(--pink)" }} />
+                    <h3 className="font-archivo text-sm font-bold text-white" style={{ letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                      Marketing Photos
+                    </h3>
+                    <span className="font-archivo text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--pink)", color: "white" }}>AI</span>
+                  </div>
+                  <button
+                    onClick={handleGeneratePhotos}
+                    disabled={isGeneratingPhotos}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-archivo text-xs font-semibold"
+                    style={{ background: "var(--pink)", color: "white", opacity: isGeneratingPhotos ? 0.7 : 1 }}
+                  >
+                    {isGeneratingPhotos ? <RefreshCw size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                    {isGeneratingPhotos ? "Generating..." : marketingPhotos.length > 0 ? "Regenerate" : "Generate Photos"}
+                  </button>
+                </div>
+                {isGeneratingPhotos && (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse" style={{ background: "var(--pink)" }}>
+                      <Camera size={20} className="text-white" />
+                    </div>
+                    <p className="font-archivo text-sm text-white">Generating professional marketing photos...</p>
+                    <p className="font-archivo text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>This takes 15–30 seconds</p>
+                  </div>
+                )}
+                {!isGeneratingPhotos && marketingPhotos.length === 0 && (
+                  <div className="text-center py-6">
+                    <p className="font-archivo text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>No marketing photos yet.</p>
+                    <p className="font-archivo text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Generate 3 professional AI photos ready for listings.</p>
+                  </div>
+                )}
+                {!isGeneratingPhotos && marketingPhotos.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {marketingPhotos.map((photo: any) => (
+                      <div key={photo.id} className="relative group rounded-xl overflow-hidden" style={{ aspectRatio: "4/3" }}>
+                        <img src={photo.imageUrl} alt={photo.label || photo.style} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                          <p className="font-archivo text-xs text-white font-semibold">{photo.label || photo.style}</p>
+                          <a
+                            href={photo.imageUrl}
+                            download={`${photo.style}.jpg`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-archivo text-xs font-semibold"
+                            style={{ background: "var(--pink)", color: "white" }}
+                          >
+                            <Download size={11} /> Download
+                          </a>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5" style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.7))" }}>
+                          <p className="font-archivo text-xs text-white font-semibold">{photo.label || photo.style}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Created date */}
               {appraisal.createdAt && (

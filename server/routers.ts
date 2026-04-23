@@ -14,6 +14,7 @@ import { healthyHomesRouter } from "./routers/healthyHomes";
 import { agentWorkflowRouter } from "./routers/agentWorkflow";
 import { smokeAlarmsRouter } from "./routers/smokeAlarms";
 import { ownersRouter } from "./routers/owners";
+import { marketingPhotosRouter } from "./routers/marketingPhotos";
 
 export const appRouter = router({
   system: systemRouter,
@@ -37,6 +38,7 @@ export const appRouter = router({
   agent: agentWorkflowRouter,
   smokeAlarms: smokeAlarmsRouter,
   owners: ownersRouter,
+  marketingPhotos: marketingPhotosRouter,
 });
 
 export type AppRouter = typeof appRouter;
