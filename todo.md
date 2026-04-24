@@ -771,3 +771,19 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 - [x] PM review/approve/reject workflow properly wired
 - [x] Correct draft/pm_approved/sent statuses in DB and UI
 - [x] Mobile-responsive layout (collapsible owner list, stacked tabs)
+
+## Inventory & Chattels
+- [x] Audit existing Inventory and Chattels pages and DB schema
+- [x] Inventory: room-by-room item list with condition ratings (Excellent/Good/Fair/Poor)
+- [x] Inventory: add/edit/delete items, photo placeholder, notes
+- [x] Inventory: seed realistic data for 14 Rata Street (13 items)
+- [x] Chattels: appliances/fixtures list with make, model, serial number, install date, warranty expiry
+- [x] Chattels: add/edit/delete, condition status, next service date
+- [x] Chattels: seed realistic data for 14 Rata Street (7 items)
+
+## Maintenance Plan
+- [x] 12-month schedule view with traffic-light status (green/amber/red)
+- [x] Cost estimates per task, total annual cost summary
+- [x] Task categories (Routine, Seasonal, Compliance, Urgent)
+- [x] Mark tasks complete, defer, or escalate
+- [x] Seed realistic 12-month plan for 14 Rata Street (6 items)

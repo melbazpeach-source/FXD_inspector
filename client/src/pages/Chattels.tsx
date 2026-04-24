@@ -1,12 +1,13 @@
 import { useState } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  Plus, Wrench, CheckCircle2, AlertCircle, XCircle, Building2,
-  ChevronRight, Search, Filter, Zap, Edit2, Trash2
+  Plus, Wrench, Building2,
+  ChevronRight, Search, Filter, Edit2, Trash2, X, Check, ArrowLeft, ShieldCheck
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,6 +33,8 @@ const CONDITION_OPTIONS = [
   { value: "poor", label: "Poor", color: "var(--pink)" },
 ];
 
+type EditChattel = { id: number; name: string; condition: string; notes: string; };
+
 type NewChattel = {
   name: string;
   category: string;
@@ -46,6 +49,9 @@ type NewChattel = {
 export default function Chattels() {
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editChattel, setEditChattel] = useState<EditChattel|null>(null);
+  const [delConfirm, setDelConfirm] = useState<number|null>(null);
+  const [detail, setDetail] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [newChattel, setNewChattel] = useState<NewChattel>({
@@ -64,6 +70,14 @@ export default function Chattels() {
     { propertyId: selectedPropertyId! },
     { enabled: !!selectedPropertyId }
   );
+  const updateChattelMutation = trpc.chattels.update.useMutation({
+    onSuccess: () => { chattelsQuery.refetch(); setEditChattel(null); toast.success("Updated"); },
+    onError: () => toast.error("Failed to update"),
+  });
+  const deleteChattelMutation = trpc.chattels.delete.useMutation({
+    onSuccess: () => { chattelsQuery.refetch(); setDelConfirm(null); toast.success("Removed"); },
+    onError: () => toast.error("Failed to remove"),
+  });
   const addChattelMutation = trpc.chattels.create.useMutation({
     onSuccess: () => {
       chattelsQuery.refetch();
@@ -99,23 +113,57 @@ export default function Chattels() {
     });
   };
 
+  const selectedProp = (propertiesQuery.data as any[])?.find((p: any) => p.id === selectedPropertyId);
+
   return (
+    <DashboardLayout title="Chattels">
+    <div className="flex h-full" style={{ minHeight:"calc(100vh - 56px)" }}>
+      {/* Left panel */}
+      <div className={`flex-col border-r flex-shrink-0 w-full lg:w-72 ${detail?"hidden lg:flex":"flex"}`}
+        style={{ borderColor:"rgba(0,0,0,0.08)", background:"var(--cream)" }}>
+        <div className="px-5 pt-6 pb-4">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background:"var(--black)" }}>
+              <Wrench className="w-4 h-4" style={{ color:"var(--yellow)" }} />
+            </div>
+            <h1 className="font-anton text-2xl" style={{ color:"var(--black)", letterSpacing:"-0.01em" }}>CHATTELS</h1>
+          </div>
+          <p className="font-archivo text-xs" style={{ color:"var(--muted)" }}>Fixed items register</p>
+        </div>
+        <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-1.5">
+          {(propertiesQuery.data as any[])?.map((p: any) => {
+            const active = selectedPropertyId===p.id;
+            return (
+              <button key={p.id} onClick={() => { setSelectedPropertyId(p.id); setDetail(true); }}
+                className="w-full text-left rounded-xl px-4 py-3 flex items-center gap-3 transition-all"
+                style={{ background:active?"var(--black)":"white", border:`1.5px solid ${active?"var(--black)":"rgba(0,0,0,0.08)"}` }}>
+                <Building2 className="w-4 h-4 flex-shrink-0" style={{ color:active?"var(--yellow)":"var(--pink)" }} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-archivo text-sm font-semibold truncate" style={{ color:active?"white":"var(--black)" }}>{p.address}</p>
+                  {p.suburb && <p className="font-archivo text-xs truncate" style={{ color:active?"rgba(255,255,255,0.6)":"var(--muted)" }}>{p.suburb}</p>}
+                </div>
+                <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color:active?"rgba(255,255,255,0.5)":"var(--muted)" }} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {/* Right panel */}
+      <div className={`flex-1 overflow-y-auto ${detail?"flex flex-col":"hidden lg:flex lg:flex-col"}`} style={{ background:"var(--cream)" }}>
     <div className="p-6 max-w-5xl mx-auto" style={{ background: "var(--cream)" }}>
+      <button onClick={() => setDetail(false)} className="lg:hidden flex items-center gap-2 mb-4 font-archivo text-sm font-semibold" style={{ color:"var(--black)" }}>
+        <ArrowLeft className="w-4 h-4" /> All Properties
+      </button>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-sm flex items-center justify-center" style={{ background: "var(--black)" }}>
-              <Wrench size={18} style={{ color: "var(--yellow)" }} />
-            </div>
-            <div>
-              <h1 className="font-anton text-3xl" style={{ color: "var(--black)", letterSpacing: "0.01em" }}>
-                CHATTELS
-              </h1>
-              <p className="text-sm" style={{ color: "var(--muted)" }}>
-                Fixed items register — always present regardless of tenancy type
-              </p>
-            </div>
+          <div>
+            <h2 className="font-anton text-xl" style={{ color: "var(--black)", letterSpacing: "-0.01em" }}>
+              {selectedProp?.address || "CHATTELS"}
+            </h2>
+            <p className="text-sm" style={{ color: "var(--muted)" }}>
+              Fixed items register — always present regardless of tenancy type
+            </p>
           </div>
           {selectedPropertyId && (
             <Button
@@ -143,32 +191,11 @@ export default function Chattels() {
         </div>
       </div>
 
-      {/* Property selector */}
       {!selectedPropertyId ? (
-        <div>
-          <h2 className="font-archivo text-sm mb-4" style={{ color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Select Property
-          </h2>
-          <div className="grid gap-3">
-            {(propertiesQuery.data as any[])?.map((prop: any, _idx: number) => (
-              <button
-                key={prop.id}
-                onClick={() => setSelectedPropertyId(prop.id)}
-                className="flex items-center gap-4 p-4 rounded-sm border text-left transition-all hover:shadow-md"
-                style={{ background: "var(--white)", borderColor: "var(--border)" }}
-              >
-                <div className="w-10 h-10 rounded-sm flex items-center justify-center flex-shrink-0" style={{ background: "var(--cream)" }}>
-                  <Building2 size={18} style={{ color: "var(--muted)" }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-archivo text-sm font-bold truncate" style={{ color: "var(--ink)", letterSpacing: "0.02em" }}>
-                    {prop.address}
-                  </div>
-                  <div className="text-sm" style={{ color: "var(--muted)" }}>{prop.suburb}, {prop.city}</div>
-                </div>
-                <ChevronRight size={16} style={{ color: "var(--muted-light)" }} />
-              </button>
-            ))}
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center">
+            <Wrench className="w-12 h-12 mx-auto mb-4" style={{ color:"rgba(0,0,0,0.1)" }} />
+            <p className="font-archivo text-sm font-semibold" style={{ color:"var(--black)" }}>Select a property</p>
           </div>
         </div>
       ) : (
@@ -276,8 +303,11 @@ export default function Chattels() {
                       >
                         {condInfo.label}
                       </Badge>
-                      <button className="p-1.5 rounded-sm hover:bg-gray-100 transition-colors">
-                        <Edit2 size={13} style={{ color: "var(--muted-light)" }} />
+                      <button onClick={() => setEditChattel({ id: chattel.id, name: chattel.name, condition: chattel.currentCondition||"good", notes: chattel.notes||"" })} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background:"var(--cream)" }}>
+                        <Edit2 size={13} style={{ color: "var(--black)" }} />
+                      </button>
+                      <button onClick={() => setDelConfirm(chattel.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background:"rgba(239,68,68,0.08)" }}>
+                        <Trash2 size={13} style={{ color: "#ef4444" }} />
                       </button>
                     </div>
                   </div>
@@ -285,6 +315,61 @@ export default function Chattels() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      </div></div></div>
+
+      {/* Edit Chattel Modal */}
+      {editChattel && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background:"rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background:"white" }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ background:"var(--black)" }}>
+              <h3 className="font-anton text-lg text-white">EDIT CHATTEL</h3>
+              <button onClick={()=>setEditChattel(null)}><X className="w-5 h-5 text-white" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="font-archivo text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color:"var(--muted)" }}>Condition</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["new","excellent","good","fair","poor"].map(c=>(
+                    <button key={c} onClick={()=>setEditChattel(e=>e?{...e,condition:c}:null)}
+                      className="px-3 py-2 rounded-xl font-archivo text-xs font-semibold transition-all text-center capitalize"
+                      style={{ background:editChattel.condition===c?"var(--black)":"var(--cream)", color:editChattel.condition===c?"white":"var(--black)", border:`1.5px solid ${editChattel.condition===c?"var(--black)":"rgba(0,0,0,0.1)"}` }}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="font-archivo text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color:"var(--muted)" }}>Notes</label>
+                <textarea value={editChattel.notes} onChange={e=>setEditChattel(ec=>ec?{...ec,notes:e.target.value}:null)} rows={2}
+                  className="w-full rounded-xl px-4 py-2.5 font-archivo text-sm outline-none resize-none"
+                  style={{ background:"var(--cream)", border:"1.5px solid rgba(0,0,0,0.1)", color:"var(--black)" }} />
+              </div>
+            </div>
+            <div className="px-6 py-4 flex gap-3" style={{ borderTop:"1.5px solid rgba(0,0,0,0.08)" }}>
+              <button onClick={()=>setEditChattel(null)} className="flex-1 fxd-btn" style={{ background:"var(--cream)", color:"var(--black)" }}>Cancel</button>
+              <button onClick={()=>updateChattelMutation.mutate({ id:editChattel.id, currentCondition:editChattel.condition as any, notes:editChattel.notes||undefined })}
+                className="flex-1 fxd-btn fxd-btn-pink flex items-center justify-center gap-2">
+                <Check className="w-4 h-4" /> Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm */}
+      {delConfirm !== null && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background:"rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-6" style={{ background:"white" }}>
+            <h3 className="font-anton text-lg mb-2" style={{ color:"var(--black)" }}>REMOVE CHATTEL?</h3>
+            <p className="font-archivo text-sm mb-6" style={{ color:"var(--muted)" }}>This will permanently remove the item from the register.</p>
+            <div className="flex gap-3">
+              <button onClick={()=>setDelConfirm(null)} className="flex-1 fxd-btn" style={{ background:"var(--cream)", color:"var(--black)" }}>Cancel</button>
+              <button onClick={()=>deleteChattelMutation.mutate({id:delConfirm!})} className="flex-1 fxd-btn" style={{ background:"#ef4444", color:"white" }}>Remove</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -371,6 +456,6 @@ export default function Chattels() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 }

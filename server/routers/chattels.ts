@@ -115,16 +115,22 @@ export const chattelsRouter = router({
 
   // ── Inventory Items ───────────────────────────────────────────────────────
   listInventory: protectedProcedure
-    .input(z.object({ inspectionId: z.number() }))
+    .input(z.object({ inspectionId: z.number().optional(), propertyId: z.number().optional() }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];
-      return db.select().from(inventoryItems).where(eq(inventoryItems.inspectionId, input.inspectionId));
+      if (input.propertyId) {
+        return db.select().from(inventoryItems).where(eq(inventoryItems.propertyId, input.propertyId));
+      }
+      if (input.inspectionId) {
+        return db.select().from(inventoryItems).where(eq(inventoryItems.inspectionId, input.inspectionId));
+      }
+      return [];
     }),
 
   createInventoryItem: protectedProcedure
     .input(z.object({
-      inspectionId: z.number(),
+      inspectionId: z.number().optional(),
       propertyId: z.number(),
       name: z.string(),
       category: z.enum(["whiteware","furniture","appliances","tools_equipment","soft_furnishings","electronics","other"]),
@@ -140,7 +146,7 @@ export const chattelsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("DB unavailable");
       const [result] = await db.insert(inventoryItems).values({
-        inspectionId: input.inspectionId,
+        inspectionId: input.inspectionId ?? 0,
         propertyId: input.propertyId,
         name: input.name,
         category: input.category,

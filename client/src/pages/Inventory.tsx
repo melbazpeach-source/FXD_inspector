@@ -1,400 +1,345 @@
 import { useState } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  Package, ShoppingCart, Plus, Building2, ChevronRight,
-  AlertCircle, CheckCircle2, Zap, Minus
+  Package, Plus, Building2, ChevronRight, X, Check,
+  Pencil, Trash2, AlertCircle, CheckCircle2, Clock, Minus,
+  ShoppingCart, ArrowLeft,
 } from "lucide-react";
 
-const CONDITION_COLORS: Record<string, string> = {
-  new: "#10b981",
-  good: "#6366f1",
-  fair: "var(--yellow-warm)",
-  poor: "var(--pink)",
-  damaged: "#ef4444",
-};
-
 const CATEGORY_LABELS: Record<string, string> = {
+  whiteware: "Whiteware",
   furniture: "Furniture",
   appliances: "Appliances",
-  fixtures: "Fixtures",
+  tools_equipment: "Tools & Equipment",
   soft_furnishings: "Soft Furnishings",
-  white_goods: "White Goods",
-  outdoor: "Outdoor",
+  electronics: "Electronics",
   other: "Other",
 };
 
+const CONDITION_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  new:       { label: "New",      color: "#6366f1", bg: "rgba(99,102,241,0.1)"  },
+  excellent: { label: "Excellent",color: "#10b981", bg: "rgba(16,185,129,0.1)" },
+  good:      { label: "Good",     color: "#22c55e", bg: "rgba(34,197,94,0.1)"  },
+  fair:      { label: "Fair",     color: "#d97706", bg: "rgba(217,119,6,0.1)"  },
+  poor:      { label: "Poor",     color: "#ef4444", bg: "rgba(239,68,68,0.1)"  },
+  damaged:   { label: "Damaged",  color: "#dc2626", bg: "rgba(220,38,38,0.1)"  },
+  missing:   { label: "Missing",  color: "#9ca3af", bg: "rgba(156,163,175,0.1)"},
+};
+
+type InventoryCategory = "whiteware"|"furniture"|"appliances"|"tools_equipment"|"soft_furnishings"|"electronics"|"other";
+type InventoryCondition = "new"|"excellent"|"good"|"fair"|"poor"|"damaged"|"missing";
+
+interface ItemForm {
+  name: string; category: InventoryCategory; quantity: number;
+  condition: InventoryCondition; description: string; serialNumber: string; notes: string;
+}
+const EMPTY: ItemForm = { name:"", category:"furniture", quantity:1, condition:"good", description:"", serialNumber:"", notes:"" };
+
 export default function Inventory() {
-  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"inventory" | "shopping">("inventory");
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newItem, setNewItem] = useState({
-    name: "", category: "furniture", condition: "good",
-    quantityRequired: 1, quantityPresent: 1, notes: ""
-  });
+  const [selPropId, setSelPropId] = useState<number|null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<number|null>(null);
+  const [form, setForm] = useState<ItemForm>(EMPTY);
+  const [delConfirm, setDelConfirm] = useState<number|null>(null);
+  const [tab, setTab] = useState<"inventory"|"shopping">("inventory");
+  const [detail, setDetail] = useState(false);
 
-  const propertiesQuery = trpc.properties.list.useQuery();
-
-  // Placeholder data for UI demonstration
-  const inventoryItems: any[] = [];
-  const shoppingList = inventoryItems.filter(
-    (item: any) => (item.quantityPresent || 0) < (item.quantityRequired || 1)
+  const { data: props = [] } = trpc.properties.list.useQuery();
+  const { data: items = [], refetch } = trpc.chattels.listInventory.useQuery(
+    { propertyId: selPropId! }, { enabled: !!selPropId }
   );
 
-  const handleAddItem = () => {
-    toast.info("Connect to inspection to add inventory items");
-    setShowAddForm(false);
+  const createM = trpc.chattels.createInventoryItem.useMutation({
+    onSuccess: () => { refetch(); setShowForm(false); setForm(EMPTY); toast.success("Item added"); },
+    onError: e => toast.error(e.message),
+  });
+  const updateM = trpc.chattels.updateInventoryItem.useMutation({
+    onSuccess: () => { refetch(); setShowForm(false); setEditId(null); setForm(EMPTY); toast.success("Updated"); },
+    onError: e => toast.error(e.message),
+  });
+  const deleteM = trpc.chattels.deleteInventoryItem.useMutation({
+    onSuccess: () => { refetch(); setDelConfirm(null); toast.success("Removed"); },
+    onError: e => toast.error(e.message),
+  });
+
+  const handleSubmit = () => {
+    if (!selPropId || !form.name) return;
+    if (editId) updateM.mutate({ id: editId, condition: form.condition, notes: form.notes, quantity: form.quantity });
+    else createM.mutate({ propertyId: selPropId, ...form });
+  };
+
+  const openEdit = (item: (typeof items)[0]) => {
+    setEditId(item.id);
+    setForm({ name: item.name, category: item.category as InventoryCategory, quantity: item.quantity??1,
+      condition: (item.condition??"good") as InventoryCondition, description: item.description??"",
+      serialNumber: item.serialNumber??"", notes: item.notes??"" });
+    setShowForm(true);
+  };
+
+  const selProp = props.find(p => p.id === selPropId);
+  const grouped = items.reduce((acc, i) => { (acc[i.category]??=[]).push(i); return acc; }, {} as Record<string,(typeof items)>);
+  const needsAttention = items.filter(i => ["poor","damaged","missing"].includes(i.condition??"good"));
+  const summary = {
+    good: items.filter(i => ["new","excellent","good"].includes(i.condition??"good")).length,
+    fair: items.filter(i => i.condition==="fair").length,
+    action: items.filter(i => ["poor","damaged","missing"].includes(i.condition??"good")).length,
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto" style={{ background: "var(--cream)" }}>
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-sm flex items-center justify-center" style={{ background: "var(--black)" }}>
-              <Package size={18} style={{ color: "var(--yellow)" }} />
+    <DashboardLayout title="Inventory">
+      <div className="flex h-full" style={{ minHeight:"calc(100vh - 56px)" }}>
+        {/* Left panel */}
+        <div className={`flex-col border-r flex-shrink-0 w-full lg:w-72 ${detail?"hidden lg:flex":"flex"}`}
+          style={{ borderColor:"rgba(0,0,0,0.08)", background:"var(--cream)" }}>
+          <div className="px-5 pt-6 pb-4">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background:"var(--black)" }}>
+                <Package className="w-4 h-4" style={{ color:"var(--yellow)" }} />
+              </div>
+              <h1 className="font-anton text-2xl" style={{ color:"var(--black)", letterSpacing:"-0.01em" }}>INVENTORY</h1>
             </div>
-            <div>
-              <h1 className="font-anton text-3xl" style={{ color: "var(--black)", letterSpacing: "0.01em" }}>
-                INVENTORY
-              </h1>
-              <p className="text-sm" style={{ color: "var(--muted)" }}>
-                Furnished tenancy — appliances and moveable items with quantity tracking
-              </p>
-            </div>
+            <p className="font-archivo text-xs" style={{ color:"var(--muted)" }}>Furnished tenancy item register</p>
+          </div>
+          <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-1.5">
+            {props.map(p => {
+              const active = selPropId===p.id;
+              return (
+                <button key={p.id} onClick={() => { setSelPropId(p.id); setDetail(true); }}
+                  className="w-full text-left rounded-xl px-4 py-3 flex items-center gap-3 transition-all"
+                  style={{ background:active?"var(--black)":"white", border:`1.5px solid ${active?"var(--black)":"rgba(0,0,0,0.08)"}` }}>
+                  <Building2 className="w-4 h-4 flex-shrink-0" style={{ color:active?"var(--yellow)":"var(--pink)" }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-archivo text-sm font-semibold truncate" style={{ color:active?"white":"var(--black)" }}>{p.address}</p>
+                    {p.suburb && <p className="font-archivo text-xs truncate" style={{ color:active?"rgba(255,255,255,0.6)":"var(--muted)" }}>{p.suburb}</p>}
+                  </div>
+                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color:active?"rgba(255,255,255,0.5)":"var(--muted)" }} />
+                </button>
+              );
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Info banner */}
-      <div className="rounded-sm p-4 mb-6 flex items-start gap-3" style={{ background: "var(--black)", color: "var(--white)" }}>
-        <Package size={16} style={{ color: "var(--yellow)", flexShrink: 0, marginTop: 2 }} />
-        <div>
-          <div className="font-archivo text-sm font-bold mb-1" style={{ color: "var(--yellow)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-            Furnished Tenancies Only
-          </div>
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.75)", lineHeight: 1.6 }}>
-            The inventory records all moveable appliances and items provided with a furnished tenancy — fridges, washing machines, furniture, microwaves, lawnmowers, etc. The AI agent auto-generates the inventory list from room photos. You review and confirm quantities. Missing items automatically appear on the Shopping List.
-          </p>
-        </div>
-      </div>
-
-      {/* Property selector */}
-      {!selectedPropertyId ? (
-        <div>
-          <h2 className="font-archivo text-sm mb-4" style={{ color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Select Property
-          </h2>
-          <div className="grid gap-3">
-            {(propertiesQuery.data as any[])?.map((prop: any) => (
-              <button
-                key={prop.id}
-                onClick={() => setSelectedPropertyId(prop.id)}
-                className="flex items-center gap-4 p-4 rounded-sm border text-left transition-all hover:shadow-md"
-                style={{ background: "var(--white)", borderColor: "var(--border)" }}
-              >
-                <div className="w-10 h-10 rounded-sm flex items-center justify-center flex-shrink-0" style={{ background: "var(--cream)" }}>
-                  <Building2 size={18} style={{ color: "var(--muted)" }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-archivo text-sm font-bold truncate" style={{ color: "var(--ink)", letterSpacing: "0.02em" }}>{prop.address}</div>
-                  <div className="text-sm" style={{ color: "var(--muted)" }}>{prop.suburb}, {prop.city}</div>
-                </div>
-                <ChevronRight size={16} style={{ color: "var(--muted-light)" }} />
+        {/* Right panel */}
+        <div className={`flex-1 overflow-y-auto ${detail?"flex flex-col":"hidden lg:flex lg:flex-col"}`} style={{ background:"var(--cream)" }}>
+          {!selPropId ? (
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center">
+                <Package className="w-12 h-12 mx-auto mb-4" style={{ color:"rgba(0,0,0,0.1)" }} />
+                <p className="font-archivo text-sm font-semibold" style={{ color:"var(--black)" }}>Select a property</p>
+                <p className="font-archivo text-xs mt-1" style={{ color:"var(--muted)" }}>Choose a property to view its inventory</p>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 sm:p-6 max-w-3xl mx-auto w-full">
+              <button onClick={() => setDetail(false)} className="lg:hidden flex items-center gap-2 mb-4 font-archivo text-sm font-semibold" style={{ color:"var(--black)" }}>
+                <ArrowLeft className="w-4 h-4" /> All Properties
               </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div>
-          {/* Tabs */}
-          <div className="flex gap-1 mb-6 p-1 rounded-sm" style={{ background: "var(--white)", border: "1px solid var(--border)" }}>
-            <button
-              onClick={() => setActiveTab("inventory")}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-sm font-archivo text-xs transition-all"
-              style={{
-                background: activeTab === "inventory" ? "var(--black)" : "transparent",
-                color: activeTab === "inventory" ? "var(--yellow)" : "var(--muted)",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              <Package size={12} />
-              Inventory ({inventoryItems.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("shopping")}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-sm font-archivo text-xs transition-all"
-              style={{
-                background: activeTab === "shopping" ? "var(--black)" : "transparent",
-                color: activeTab === "shopping" ? "var(--yellow)" : "var(--muted)",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              <ShoppingCart size={12} />
-              Shopping List
-              {shoppingList.length > 0 && (
-                <span className="w-4 h-4 rounded-full text-xs flex items-center justify-center font-bold" style={{ background: "var(--pink)", color: "var(--white)" }}>
-                  {shoppingList.length}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {activeTab === "inventory" && (
-            <div>
-              {/* Actions bar */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="font-archivo text-xs" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                  {inventoryItems.length} items recorded
+              <div className="flex items-start justify-between gap-3 mb-5">
+                <div>
+                  <h2 className="font-anton text-xl" style={{ color:"var(--black)", letterSpacing:"-0.01em" }}>{selProp?.address}</h2>
+                  <p className="font-archivo text-xs mt-0.5" style={{ color:"var(--muted)" }}>{items.length} item{items.length!==1?"s":""} registered</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2 rounded-sm font-archivo text-xs"
-                    style={{ letterSpacing: "0.08em", textTransform: "uppercase", borderColor: "var(--border)", color: "var(--ink)" }}
-                    onClick={() => toast.info("AI inventory generation runs during inspection")}
-                  >
-                    <Zap size={12} />
-                    AI Generate
-                  </Button>
-                  <Button
-                    onClick={() => setShowAddForm(!showAddForm)}
-                    className="flex items-center gap-2 rounded-sm font-archivo text-xs"
-                    style={{ background: "var(--black)", color: "var(--yellow)", border: "none", letterSpacing: "0.08em", textTransform: "uppercase" }}
-                  >
-                    <Plus size={12} />
-                    Add Item
-                  </Button>
-                </div>
+                <button onClick={() => { setEditId(null); setForm(EMPTY); setShowForm(true); }}
+                  className="fxd-btn fxd-btn-pink flex items-center gap-2" style={{ fontSize:13, padding:"8px 16px" }}>
+                  <Plus className="w-4 h-4" /> ADD ITEM
+                </button>
               </div>
 
-              {/* Add form */}
-              {showAddForm && (
-                <div className="rounded-sm p-5 mb-4 border" style={{ background: "var(--white)", borderColor: "var(--border)" }}>
-                  <h3 className="font-archivo text-sm font-bold mb-4" style={{ color: "var(--ink)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                    Add Inventory Item
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <label className="font-archivo text-xs mb-1 block" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Item Name</label>
-                      <Input
-                        value={newItem.name}
-                        onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))}
-                        placeholder="e.g. Dinner fork"
-                        className="rounded-sm text-sm"
-                      />
+              {items.length > 0 && (
+                <div className="grid grid-cols-3 gap-3 mb-5">
+                  {[{l:"Good",c:summary.good,col:"#22c55e",bg:"rgba(34,197,94,0.08)"},{l:"Fair",c:summary.fair,col:"#d97706",bg:"rgba(217,119,6,0.08)"},{l:"Action",c:summary.action,col:"#ef4444",bg:"rgba(239,68,68,0.08)"}].map(s=>(
+                    <div key={s.l} className="rounded-xl p-3 text-center" style={{ background:s.bg, border:`1.5px solid ${s.col}20` }}>
+                      <p className="font-anton text-2xl" style={{ color:s.col }}>{s.c}</p>
+                      <p className="font-archivo text-xs" style={{ color:"var(--muted)" }}>{s.l}</p>
                     </div>
-                    <div>
-                      <label className="font-archivo text-xs mb-1 block" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Category</label>
-                      <select
-                        value={newItem.category}
-                        onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))}
-                        className="w-full rounded-sm border px-3 py-2 text-sm"
-                        style={{ borderColor: "var(--border)", background: "var(--cream)", color: "var(--ink)" }}
-                      >
-                        {Object.entries(CATEGORY_LABELS).map(([v, l]) => (
-                          <option key={v} value={v}>{l}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="font-archivo text-xs mb-1 block" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Required Qty</label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={newItem.quantityRequired}
-                        onChange={e => setNewItem(p => ({ ...p, quantityRequired: parseInt(e.target.value) || 1 }))}
-                        className="rounded-sm text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-archivo text-xs mb-1 block" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Present Qty</label>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={newItem.quantityPresent}
-                        onChange={e => setNewItem(p => ({ ...p, quantityPresent: parseInt(e.target.value) || 0 }))}
-                        className="rounded-sm text-sm"
-                      />
-                    </div>
-                  </div>
-                  {newItem.quantityPresent < newItem.quantityRequired && (
-                    <div className="flex items-center gap-2 p-3 rounded-sm mb-3" style={{ background: "rgba(255,45,135,0.08)", border: "1px solid rgba(255,45,135,0.2)" }}>
-                      <AlertCircle size={14} style={{ color: "var(--pink)" }} />
-                      <span className="text-sm" style={{ color: "var(--pink)" }}>
-                        {newItem.quantityRequired - newItem.quantityPresent} × {newItem.name || "item"} will be added to the Shopping List
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleAddItem}
-                      className="rounded-sm font-archivo text-xs"
-                      style={{ background: "var(--black)", color: "var(--yellow)", border: "none", letterSpacing: "0.08em", textTransform: "uppercase" }}
-                    >
-                      Add Item
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowAddForm(false)}
-                      className="rounded-sm font-archivo text-xs"
-                      style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
+                  ))}
                 </div>
               )}
 
-              {/* Inventory table */}
-              {inventoryItems.length === 0 ? (
-                <div className="text-center py-16 rounded-sm border" style={{ background: "var(--white)", borderColor: "var(--border)" }}>
-                  <Package size={32} className="mx-auto mb-3 opacity-20" style={{ color: "var(--ink)" }} />
-                  <p className="font-archivo text-sm mb-1" style={{ color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>No Items Recorded</p>
-                  <p className="text-sm" style={{ color: "var(--muted-light)" }}>
-                    Start a New Inventory inspection to auto-generate the list from photos, or add items manually.
-                  </p>
-                </div>
-              ) : (
-                <div className="rounded-sm border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-                  <table className="w-full">
-                    <thead>
-                      <tr style={{ background: "var(--black)", color: "var(--white)" }}>
-                        {["Item", "Category", "Condition", "Required", "Present", "Status"].map(h => (
-                          <th key={h} className="font-archivo text-xs px-4 py-3 text-left" style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {inventoryItems.map((item: any, i: number) => {
-                        const missing = (item.quantityRequired || 1) - (item.quantityPresent || 0);
-                        return (
-                          <tr key={item.id} style={{ background: i % 2 === 0 ? "var(--white)" : "var(--cream)", borderBottom: "1px solid var(--border)" }}>
-                            <td className="px-4 py-3">
-                              <div className="font-archivo text-sm font-bold" style={{ color: "var(--ink)", letterSpacing: "0.02em" }}>{item.name}</div>
-                              {item.notes && <div className="text-xs" style={{ color: "var(--muted)" }}>{item.notes}</div>}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className="text-sm" style={{ color: "var(--muted)" }}>{CATEGORY_LABELS[item.category] || item.category}</span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <Badge className="font-archivo text-xs px-2 py-0.5" style={{ background: `${CONDITION_COLORS[item.condition] || "var(--muted)"}15`, color: CONDITION_COLORS[item.condition] || "var(--muted)", border: `1px solid ${CONDITION_COLORS[item.condition] || "var(--muted)"}30`, letterSpacing: "0.06em", textTransform: "capitalize" }}>
-                                {item.condition}
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <span className="font-archivo text-sm font-bold" style={{ color: "var(--ink)" }}>{item.quantityRequired || 1}</span>
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <span className="font-archivo text-sm font-bold" style={{ color: missing > 0 ? "var(--pink)" : "#10b981" }}>{item.quantityPresent || 0}</span>
-                            </td>
-                            <td className="px-4 py-3">
-                              {missing > 0 ? (
-                                <Badge className="font-archivo text-xs px-2 py-0.5" style={{ background: "rgba(255,45,135,0.1)", color: "var(--pink)", border: "1px solid rgba(255,45,135,0.2)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                                  {missing} Missing
-                                </Badge>
-                              ) : (
-                                <Badge className="font-archivo text-xs px-2 py-0.5" style={{ background: "rgba(16,185,129,0.1)", color: "#10b981", border: "1px solid rgba(16,185,129,0.2)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                                  Complete
-                                </Badge>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+              <div className="flex gap-0 mb-5 border-b" style={{ borderColor:"rgba(0,0,0,0.08)" }}>
+                {[{k:"inventory" as const,l:`All Items (${items.length})`},{k:"shopping" as const,l:`Needs Attention (${needsAttention.length})`}].map(t=>(
+                  <button key={t.k} onClick={()=>setTab(t.k)}
+                    className="font-archivo text-xs px-4 py-2.5 transition-colors whitespace-nowrap"
+                    style={{ borderBottom:tab===t.k?"2px solid var(--pink)":"2px solid transparent", color:tab===t.k?"var(--pink)":"var(--muted)", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:-1 }}>
+                    {t.l}
+                  </button>
+                ))}
+              </div>
 
-          {activeTab === "shopping" && (
-            <div>
-              {shoppingList.length === 0 ? (
-                <div className="text-center py-16 rounded-sm border" style={{ background: "var(--white)", borderColor: "var(--border)" }}>
-                  <CheckCircle2 size={32} className="mx-auto mb-3 opacity-20" style={{ color: "#10b981" }} />
-                  <p className="font-archivo text-sm mb-1" style={{ color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Shopping List is Clear</p>
-                  <p className="text-sm" style={{ color: "var(--muted-light)" }}>
-                    All inventory items are present and accounted for.
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="font-archivo text-xs" style={{ color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                      {shoppingList.length} items to replace or top up
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="rounded-sm font-archivo text-xs"
-                      style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}
-                      onClick={() => toast.info("Shopping list export coming soon")}
-                    >
-                      Export List
-                    </Button>
+              {tab==="inventory" && (
+                items.length===0 ? (
+                  <div className="text-center py-16 rounded-2xl" style={{ background:"white", border:"1.5px dashed rgba(0,0,0,0.1)" }}>
+                    <Package className="w-10 h-10 mx-auto mb-3" style={{ color:"rgba(0,0,0,0.1)" }} />
+                    <p className="font-archivo text-sm font-semibold" style={{ color:"var(--black)" }}>No items yet</p>
+                    <p className="font-archivo text-xs mt-1" style={{ color:"var(--muted)" }}>Add items to start tracking this property's inventory</p>
                   </div>
-                  <div className="rounded-sm border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-                    <table className="w-full">
-                      <thead>
-                        <tr style={{ background: "var(--black)", color: "var(--white)" }}>
-                          {["Item", "Required", "Present", "To Buy", "Est. Cost", "Action"].map(h => (
-                            <th key={h} className="font-archivo text-xs px-4 py-3 text-left" style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {shoppingList.map((item: any, i: number) => {
-                          const missing = (item.quantityRequired || 1) - (item.quantityPresent || 0);
-                          return (
-                            <tr key={item.id} style={{ background: i % 2 === 0 ? "var(--white)" : "var(--cream)", borderBottom: "1px solid var(--border)" }}>
-                              <td className="px-4 py-3">
-                                <div className="font-archivo text-sm font-bold" style={{ color: "var(--ink)" }}>{item.name}</div>
-                                <div className="text-xs" style={{ color: "var(--muted)" }}>{CATEGORY_LABELS[item.category] || item.category}</div>
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <span className="font-archivo text-sm" style={{ color: "var(--muted)" }}>{item.quantityRequired || 1}</span>
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <span className="font-archivo text-sm" style={{ color: "var(--pink)" }}>{item.quantityPresent || 0}</span>
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <span className="font-archivo text-sm font-bold" style={{ color: "var(--pink)" }}>{missing}</span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="text-sm" style={{ color: "var(--muted)" }}>
-                                  {item.estimatedCost ? `$${item.estimatedCost}` : "—"}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <Button
-                                  size="sm"
-                                  className="rounded-sm font-archivo text-xs"
-                                  style={{ background: "#10b981", color: "var(--white)", border: "none", letterSpacing: "0.06em", textTransform: "uppercase" }}
-                                  onClick={() => toast.success(`${item.name} marked as purchased`)}
-                                >
-                                  <CheckCircle2 size={10} className="mr-1" />
-                                  Purchased
-                                </Button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                ) : (
+                  <div className="space-y-5">
+                    {Object.entries(grouped).map(([cat, catItems]) => (
+                      <div key={cat}>
+                        <h3 className="font-archivo text-xs font-bold uppercase tracking-widest mb-2" style={{ color:"var(--muted)" }}>
+                          {CATEGORY_LABELS[cat]||cat} ({catItems.length})
+                        </h3>
+                        <div className="space-y-2">
+                          {catItems.map(item => {
+                            const cond = CONDITION_CONFIG[item.condition??"good"]??CONDITION_CONFIG.good;
+                            return (
+                              <div key={item.id} className="rounded-xl p-4 flex items-start gap-3"
+                                style={{ background:"white", border:"1.5px solid rgba(0,0,0,0.06)" }}>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="font-archivo text-sm font-semibold" style={{ color:"var(--black)" }}>{item.name}</p>
+                                    {(item.quantity??1)>1 && <span className="font-archivo text-xs px-2 py-0.5 rounded-full" style={{ background:"var(--cream)", color:"var(--muted)" }}>×{item.quantity}</span>}
+                                    <span className="font-archivo text-xs px-2 py-0.5 rounded-full" style={{ background:cond.bg, color:cond.color }}>{cond.label}</span>
+                                  </div>
+                                  {item.description && <p className="font-archivo text-xs mt-1" style={{ color:"var(--muted)" }}>{item.description}</p>}
+                                  {item.serialNumber && <p className="font-archivo text-xs mt-0.5" style={{ color:"var(--muted)" }}>S/N: {item.serialNumber}</p>}
+                                  {item.notes && <p className="font-archivo text-xs mt-0.5 italic" style={{ color:"var(--muted)" }}>{item.notes}</p>}
+                                </div>
+                                <div className="flex gap-1.5 flex-shrink-0">
+                                  <button onClick={()=>openEdit(item)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background:"var(--cream)" }}>
+                                    <Pencil className="w-3 h-3" style={{ color:"var(--black)" }} />
+                                  </button>
+                                  <button onClick={()=>setDelConfirm(item.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background:"rgba(239,68,68,0.08)" }}>
+                                    <Trash2 className="w-3 h-3" style={{ color:"#ef4444" }} />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )
+              )}
+
+              {tab==="shopping" && (
+                needsAttention.length===0 ? (
+                  <div className="text-center py-16 rounded-2xl" style={{ background:"white", border:"1.5px dashed rgba(0,0,0,0.1)" }}>
+                    <CheckCircle2 className="w-10 h-10 mx-auto mb-3" style={{ color:"#22c55e" }} />
+                    <p className="font-archivo text-sm font-semibold" style={{ color:"var(--black)" }}>All items in good condition</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {needsAttention.map(item => {
+                      const cond = CONDITION_CONFIG[item.condition??"poor"]??CONDITION_CONFIG.poor;
+                      return (
+                        <div key={item.id} className="rounded-xl p-4 flex items-center gap-3"
+                          style={{ background:"white", border:`1.5px solid ${cond.color}30` }}>
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background:cond.color }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-archivo text-sm font-semibold" style={{ color:"var(--black)" }}>{item.name}</p>
+                            <p className="font-archivo text-xs" style={{ color:cond.color }}>{cond.label} · {CATEGORY_LABELS[item.category]}</p>
+                          </div>
+                          <ShoppingCart className="w-4 h-4 flex-shrink-0" style={{ color:"var(--muted)" }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
               )}
             </div>
           )}
         </div>
+      </div>
+
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background:"rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background:"white", maxHeight:"90vh" }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ background:"var(--black)" }}>
+              <h3 className="font-anton text-lg text-white">{editId?"EDIT ITEM":"ADD ITEM"}</h3>
+              <button onClick={()=>setShowForm(false)}><X className="w-5 h-5 text-white" /></button>
+            </div>
+            <div className="overflow-y-auto p-6 space-y-4" style={{ maxHeight:"calc(90vh - 130px)" }}>
+              <div>
+                <label className="font-archivo text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color:"var(--muted)" }}>Item Name *</label>
+                <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Sofa, Washing Machine"
+                  className="w-full rounded-xl px-4 py-2.5 font-archivo text-sm outline-none"
+                  style={{ background:"var(--cream)", border:"1.5px solid rgba(0,0,0,0.1)", color:"var(--black)" }} />
+              </div>
+              {!editId && (
+                <div>
+                  <label className="font-archivo text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color:"var(--muted)" }}>Category</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(Object.entries(CATEGORY_LABELS) as [InventoryCategory,string][]).map(([v,l])=>(
+                      <button key={v} onClick={()=>setForm(f=>({...f,category:v}))}
+                        className="px-3 py-2 rounded-xl font-archivo text-xs font-semibold transition-all text-left"
+                        style={{ background:form.category===v?"var(--black)":"var(--cream)", color:form.category===v?"white":"var(--black)", border:`1.5px solid ${form.category===v?"var(--black)":"rgba(0,0,0,0.1)"}` }}>
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="font-archivo text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color:"var(--muted)" }}>Condition</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["new","excellent","good","fair","poor","damaged","missing"] as InventoryCondition[]).map(c=>(
+                    <button key={c} onClick={()=>setForm(f=>({...f,condition:c}))}
+                      className="px-3 py-2 rounded-xl font-archivo text-xs font-semibold transition-all text-left"
+                      style={{ background:form.condition===c?CONDITION_CONFIG[c].bg:"var(--cream)", color:form.condition===c?CONDITION_CONFIG[c].color:"var(--black)", border:`1.5px solid ${form.condition===c?CONDITION_CONFIG[c].color:"rgba(0,0,0,0.1)"}` }}>
+                      {CONDITION_CONFIG[c].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="font-archivo text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color:"var(--muted)" }}>Quantity</label>
+                <div className="flex items-center gap-3">
+                  <button onClick={()=>setForm(f=>({...f,quantity:Math.max(1,f.quantity-1)}))} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background:"var(--cream)", border:"1.5px solid rgba(0,0,0,0.1)" }}><Minus className="w-4 h-4" style={{ color:"var(--black)" }} /></button>
+                  <span className="font-archivo text-lg font-semibold w-8 text-center" style={{ color:"var(--black)" }}>{form.quantity}</span>
+                  <button onClick={()=>setForm(f=>({...f,quantity:f.quantity+1}))} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background:"var(--cream)", border:"1.5px solid rgba(0,0,0,0.1)" }}><Plus className="w-4 h-4" style={{ color:"var(--black)" }} /></button>
+                </div>
+              </div>
+              {!editId && (
+                <>
+                  <div>
+                    <label className="font-archivo text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color:"var(--muted)" }}>Description</label>
+                    <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Optional"
+                      className="w-full rounded-xl px-4 py-2.5 font-archivo text-sm outline-none"
+                      style={{ background:"var(--cream)", border:"1.5px solid rgba(0,0,0,0.1)", color:"var(--black)" }} />
+                  </div>
+                  <div>
+                    <label className="font-archivo text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color:"var(--muted)" }}>Serial Number</label>
+                    <input value={form.serialNumber} onChange={e=>setForm(f=>({...f,serialNumber:e.target.value}))} placeholder="Optional"
+                      className="w-full rounded-xl px-4 py-2.5 font-archivo text-sm outline-none"
+                      style={{ background:"var(--cream)", border:"1.5px solid rgba(0,0,0,0.1)", color:"var(--black)" }} />
+                  </div>
+                </>
+              )}
+              <div>
+                <label className="font-archivo text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color:"var(--muted)" }}>Notes</label>
+                <textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={2}
+                  className="w-full rounded-xl px-4 py-2.5 font-archivo text-sm outline-none resize-none"
+                  style={{ background:"var(--cream)", border:"1.5px solid rgba(0,0,0,0.1)", color:"var(--black)" }} />
+              </div>
+            </div>
+            <div className="px-6 py-4 flex gap-3" style={{ borderTop:"1.5px solid rgba(0,0,0,0.08)" }}>
+              <button onClick={()=>setShowForm(false)} className="flex-1 fxd-btn" style={{ background:"var(--cream)", color:"var(--black)" }}>Cancel</button>
+              <button onClick={handleSubmit} disabled={!form.name||createM.isPending||updateM.isPending}
+                className="flex-1 fxd-btn fxd-btn-pink flex items-center justify-center gap-2">
+                <Check className="w-4 h-4" /> {editId?"Save Changes":"Add Item"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-    </div>
+
+      {delConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background:"rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-6" style={{ background:"white" }}>
+            <h3 className="font-anton text-lg mb-2" style={{ color:"var(--black)" }}>REMOVE ITEM?</h3>
+            <p className="font-archivo text-sm mb-6" style={{ color:"var(--muted)" }}>This will permanently remove the item from the inventory.</p>
+            <div className="flex gap-3">
+              <button onClick={()=>setDelConfirm(null)} className="flex-1 fxd-btn" style={{ background:"var(--cream)", color:"var(--black)" }}>Cancel</button>
+              <button onClick={()=>deleteM.mutate({id:delConfirm})} className="flex-1 fxd-btn" style={{ background:"#ef4444", color:"white" }}>Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
   );
 }
