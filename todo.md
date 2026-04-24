@@ -756,3 +756,7 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 - [x] Push To modal: select destination (Palace / Console / PropertyTree / Email / Download PDF)
 - [x] Implement push-to-email with inspection summary
 - [x] Implement push-to-Palace (maintenance requests for critical items)
+
+## Improvements Page Fix
+- [x] Wire ImprovementRecommendations page to real improvements DB table via tRPC router
+- [x] Ensure seeded data for 14 Rata Street is visible on the page
