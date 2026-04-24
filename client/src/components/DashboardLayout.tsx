@@ -1,8 +1,10 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { SUPPORTED_LANGUAGES, type LanguageCode } from "@/i18n";
 import {
   BarChart3,
   Building2,
+  ChevronDown,
   ClipboardList,
   FileText,
   Globe,
@@ -22,49 +24,11 @@ import {
   Sparkles,
   CheckSquare,
   Flame,
+  Languages,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
-
-const NAV_GROUPS = [
-  {
-    group: "Workspace",
-    items: [
-      { icon: Home,          label: "Dashboard",     href: "/dashboard" },
-      { icon: ClipboardList, label: "Inspections",   href: "/inspections" },
-      { icon: Building2,     label: "Properties",    href: "/properties" },
-      { icon: CheckSquare,   label: "Review Queue",  href: "/review-queue", badge: "PM" },
-      { icon: Users,         label: "Landlord Portal", href: "/landlord-portal", badge: "LL" },
-    ],
-  },
-  {
-    group: "Property Records",
-    items: [
-      { icon: Package,    label: "Chattels",   href: "/chattels" },
-      { icon: ShoppingBag, label: "Inventory",  href: "/inventory" },
-      { icon: Flame,      label: "Smoke Alarms",  href: "/smoke-alarms", badge: "SA" },
-      { icon: Shield,     label: "Healthy Homes", href: "/healthy-homes", badge: "HH" },
-      { icon: Users,      label: "Owners",         href: "/owners" },
-    ],
-  },
-  {
-    group: "Intelligence",
-    items: [
-      { icon: Wrench,    label: "Maint. Plan",   href: "/maintenance-plan" },
-      { icon: TrendingUp, label: "Rent Appraisal", href: "/rental-appraisal" },
-      { icon: Sparkles,  label: "Improvements",  href: "/improvements" },
-      { icon: FileText,  label: "Reports",        href: "/reports" },
-    ],
-  },
-  {
-    group: "System",
-    items: [
-      { icon: Globe,         label: "Integrations", href: "/integrations" },
-      { icon: MessageSquare, label: "Fixx",         href: "/fixx", badge: "AI" },
-      { icon: Settings,      label: "Settings",     href: "/settings" },
-    ],
-  },
-];
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -75,8 +39,69 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
   const { user, loading, isAuthenticated, logout } = useAuth();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+  const { t, i18n } = useTranslation();
+
+  const currentLang = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) ?? SUPPORTED_LANGUAGES[1];
+
+  const changeLanguage = (code: LanguageCode) => {
+    i18n.changeLanguage(code);
+    setLangMenuOpen(false);
+  };
+
+  // Close language menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(e.target as Node)) {
+        setLangMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   useEffect(() => { setSidebarOpen(false); }, [location]);
+
+  const NAV_GROUPS = [
+    {
+      group: t("nav.workspace"),
+      items: [
+        { icon: Home,          label: t("nav.dashboard"),      href: "/dashboard" },
+        { icon: ClipboardList, label: t("nav.inspections"),    href: "/inspections" },
+        { icon: Building2,     label: t("nav.properties"),     href: "/properties" },
+        { icon: CheckSquare,   label: t("nav.reviewQueue"),    href: "/review-queue", badge: "PM" },
+        { icon: Users,         label: t("nav.landlordPortal"), href: "/landlord-portal", badge: "LL" },
+      ],
+    },
+    {
+      group: t("nav.propertyRecords"),
+      items: [
+        { icon: Package,     label: t("nav.chattels"),    href: "/chattels" },
+        { icon: ShoppingBag, label: t("nav.inventory"),   href: "/inventory" },
+        { icon: Flame,       label: t("nav.smokeAlarms"), href: "/smoke-alarms", badge: "SA" },
+        { icon: Shield,      label: t("nav.healthyHomes"), href: "/healthy-homes", badge: "HH" },
+        { icon: Users,       label: t("nav.owners"),      href: "/owners" },
+      ],
+    },
+    {
+      group: t("nav.intelligence"),
+      items: [
+        { icon: Wrench,     label: t("nav.maintPlan"),    href: "/maintenance-plan" },
+        { icon: TrendingUp, label: t("nav.rentAppraisal"), href: "/rental-appraisal" },
+        { icon: Sparkles,   label: t("nav.improvements"), href: "/improvements" },
+        { icon: FileText,   label: t("nav.reports"),      href: "/reports" },
+      ],
+    },
+    {
+      group: t("nav.system"),
+      items: [
+        { icon: Globe,         label: t("nav.integrations"), href: "/integrations" },
+        { icon: MessageSquare, label: t("nav.fixx"),         href: "/fixx", badge: "AI" },
+        { icon: Settings,      label: t("nav.settings"),     href: "/settings" },
+      ],
+    },
+  ];
 
   if (loading) {
     return (
@@ -95,7 +120,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
             className="font-archivo text-xs tracking-widest uppercase"
             style={{ color: "var(--muted)" }}
           >
-            Loading…
+            {t("common.loading")}
           </div>
         </div>
       </div>
@@ -250,6 +275,57 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
         className="px-4 py-3 border-t flex-shrink-0"
         style={{ borderColor: "rgba(255,255,255,0.07)" }}
       >
+        {/* Language selector */}
+        <div ref={langMenuRef} className="relative mb-2.5">
+          <button
+            onClick={() => setLangMenuOpen((v) => !v)}
+            className="flex items-center gap-2 w-full px-2 py-1.5 rounded-sm transition-colors"
+            style={{ color: "rgba(255,255,255,0.5)" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.85)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
+          >
+            <Languages size={12} />
+            <span
+              className="font-archivo flex-1 text-left"
+              style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}
+            >
+              {currentLang.flag} {currentLang.nativeName}
+            </span>
+            <ChevronDown size={10} style={{ transform: langMenuOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+          </button>
+
+          {langMenuOpen && (
+            <div
+              className="absolute bottom-full left-0 right-0 mb-1 rounded-sm overflow-hidden shadow-xl z-50"
+              style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)" }}
+            >
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => changeLanguage(lang.code as LanguageCode)}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 text-left transition-colors"
+                  style={{
+                    background: i18n.language === lang.code ? "var(--pink)" : "transparent",
+                    color: i18n.language === lang.code ? "var(--white)" : "rgba(255,255,255,0.65)",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (i18n.language !== lang.code) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (i18n.language !== lang.code) (e.currentTarget as HTMLElement).style.background = "transparent";
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>{lang.flag}</span>
+                  <span className="font-archivo" style={{ fontSize: 10, letterSpacing: "0.06em" }}>
+                    {lang.nativeName}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* User info */}
         <div className="flex items-center gap-2.5 mb-2.5">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-archivo text-xs"
@@ -284,7 +360,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
             className="font-archivo"
             style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}
           >
-            Sign Out
+            {t("nav.signOut")}
           </span>
         </button>
       </div>
@@ -339,7 +415,15 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
           >
             FXD<span style={{ color: "var(--pink)" }}>.</span>
           </div>
-          <div className="w-8" />
+          {/* Mobile language button */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-1.5 rounded-sm"
+            style={{ color: "rgba(255,255,255,0.6)", fontSize: 16 }}
+            title={t("nav.language")}
+          >
+            {currentLang.flag}
+          </button>
         </header>
 
         {/* Page content */}

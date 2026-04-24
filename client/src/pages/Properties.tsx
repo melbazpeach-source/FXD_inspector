@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 
 export default function Properties() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -58,7 +60,7 @@ export default function Properties() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-foreground mb-1">Properties</h1>
+          <h1 className="font-display text-3xl font-semibold text-foreground mb-1">{t("properties.title")}</h1>
           <p className="text-muted-foreground text-sm">Manage your rental portfolio</p>
         </div>
         <Button
@@ -67,7 +69,7 @@ export default function Properties() {
           size="sm"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Property
+          {t("properties.addProperty")}
         </Button>
       </div>
 
@@ -75,7 +77,7 @@ export default function Properties() {
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search by address, suburb, or city..."
+          placeholder={t("common.search") + "..."}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -96,13 +98,13 @@ export default function Properties() {
       ) : !properties || properties.length === 0 ? (
         <div className="text-center py-20 bg-card rounded-xl border border-border">
           <Building2 className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
-          <h3 className="font-display text-lg font-medium text-foreground mb-2">No properties yet</h3>
+          <h3 className="font-display text-lg font-medium text-foreground mb-2">{t("properties.noProperties")}</h3>
           <p className="text-muted-foreground text-sm mb-6">
             Add your first property to start managing inspections.
           </p>
           <Button onClick={() => setAddOpen(true)} className="bg-primary text-primary-foreground">
             <Plus className="h-4 w-4 mr-2" />
-            Add Property
+            {t("properties.addProperty")}
           </Button>
         </div>
       ) : (
@@ -151,7 +153,7 @@ export default function Properties() {
                   disabled={createInspection.isPending}
                 >
                   <CalendarCheck className="h-3.5 w-3.5 mr-1.5" />
-                  New Inspection
+                  {t("dashboard.newInspection")}
                 </Button>
               </div>
             </div>
@@ -163,7 +165,7 @@ export default function Properties() {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display">Add Property</DialogTitle>
+            <DialogTitle className="font-display">{t("properties.addProperty")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 mt-2">
             <Input
@@ -217,7 +219,7 @@ export default function Properties() {
               }}
               disabled={!form.address.trim() || createProperty.isPending}
             >
-              Add Property
+              {t("properties.addProperty")}
             </Button>
           </div>
         </DialogContent>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +37,7 @@ const KNOWLEDGE_TOPICS = [
 ];
 
 export default function FixxChat() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -118,7 +120,7 @@ export default function FixxChat() {
         {/* Knowledge topics */}
         <div className="p-4 flex-1 overflow-y-auto">
           <div className="font-archivo text-xs mb-3" style={{ color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Knowledge Base
+            {t("fixx.knowledgeBase")}
           </div>
           <div className="space-y-1">
             {KNOWLEDGE_TOPICS.map((topic) => (
@@ -134,7 +136,7 @@ export default function FixxChat() {
           </div>
 
           <div className="font-archivo text-xs mt-5 mb-3" style={{ color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Quick Prompts
+            {t("fixx.quickPrompts")}
           </div>
           <div className="space-y-2">
             {QUICK_PROMPTS.map((qp) => {
@@ -161,7 +163,7 @@ export default function FixxChat() {
         {/* Disclaimer */}
         <div className="p-4 border-t" style={{ borderColor: "var(--border)" }}>
           <p className="text-xs" style={{ color: "var(--muted-light)", lineHeight: 1.5 }}>
-            Fixx is trained on NZ tenancy law and property management practice. Always verify legal matters with a qualified professional.
+            {t("fixx.disclaimer")}
           </p>
         </div>
       </aside>
@@ -295,7 +297,7 @@ export default function FixxChat() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask Fixx anything about NZ tenancy law, Healthy Homes, inspections, or property management..."
+              placeholder={t("fixx.placeholder")}
               className="flex-1 resize-none min-h-[48px] max-h-32 text-sm"
               style={{ background: "var(--cream)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)" }}
               rows={1}
@@ -315,7 +317,7 @@ export default function FixxChat() {
             </Button>
           </div>
           <p className="text-xs mt-2" style={{ color: "var(--muted-light)" }}>
-            Press Enter to send · Shift+Enter for new line · AI can draft, but it cannot decide
+            {t("fixx.hint")}
           </p>
         </div>
       </div>

@@ -716,3 +716,21 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 ## Owners Page Fixes
 - [ ] Make Owners page fully responsive (mobile tap-to-detail, back button)
 - [ ] Add Push to CRM button on owner detail (Palace, Console, PropertyTree, standalone mode)
+
+## Fixx Greetings & i18n
+- [ ] Add Tēnā koe / Kia ora alternating greeting to Fixx AI
+- [ ] Add Ngā mihi as alternating sign-off in Fixx AI
+- [x] Install react-i18next and i18next
+- [x] Create translation files for English, Te reo Māori, Samoan, Tongan, Mandarin, Hindi, Sinhala
+- [x] Translate all nav items and DashboardLayout strings
+- [x] Translate Dashboard page
+- [x] Translate Inspections pages
+- [x] Translate Properties page
+- [ ] Translate Healthy Homes page
+- [ ] Translate Smoke Alarms page
+- [ ] Translate Owners page
+- [ ] Translate Landlord Portal page
+- [ ] Translate Chattels, Inventory, Maintenance Plan, Rent Appraisal, Improvements, Reports pages
+- [x] Translate Review Queue, Fixx, Settings, Integrations pages (keys in locale files, ready for adoption)
+- [x] Add language selector to DashboardLayout header (Te reo Māori first)
+- [x] Persist language preference in localStorage (fxd-language key)

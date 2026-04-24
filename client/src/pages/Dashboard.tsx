@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -80,6 +81,7 @@ const INSPECTION_TYPES = [
 type InspectionTypeId = (typeof INSPECTION_TYPES)[number]["id"];
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
@@ -163,7 +165,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-foreground mb-1">Dashboard</h1>
+          <h1 className="font-display text-3xl font-semibold text-foreground mb-1">{t("dashboard.title")}</h1>
           <p className="text-muted-foreground text-sm">
             {new Date().toLocaleDateString("en-NZ", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </p>
@@ -176,7 +178,7 @@ export default function Dashboard() {
             disabled={syncMutation.isPending}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? "animate-spin" : ""}`} />
-            Sync
+            {t("dashboard.sync")}
           </Button>
           <Button
             size="sm"
@@ -184,7 +186,7 @@ export default function Dashboard() {
             className="bg-primary text-primary-foreground"
           >
             <Plus className="h-4 w-4 mr-2" />
-            New Inspection
+            {t("dashboard.newInspection")}
           </Button>
         </div>
       </div>
@@ -193,28 +195,28 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           {
-            label: "Scheduled",
+            label: t("dashboard.scheduled"),
             value: scheduled.filter((a) => new Date(a.appointment.scheduledAt) >= now).length,
             icon: CalendarClock,
             color: "text-blue-600",
             bg: "bg-blue-50",
           },
           {
-            label: "Overdue",
+            label: t("dashboard.overdue"),
             value: overdue.length,
             icon: AlertCircle,
             color: "text-red-600",
             bg: "bg-red-50",
           },
           {
-            label: "Completed",
+            label: t("dashboard.completed"),
             value: completed.length,
             icon: CheckCircle2,
             color: "text-green-600",
             bg: "bg-green-50",
           },
           {
-            label: "Total",
+            label: t("dashboard.total"),
             value: allAppts.length,
             icon: TrendingUp,
             color: "text-purple-600",
@@ -345,8 +347,8 @@ export default function Dashboard() {
                   <div className="ml-auto flex items-center gap-1 text-primary text-xs font-medium group-hover:gap-2 transition-all">
                     <Sparkles className="h-3.5 w-3.5" />
                     {appointment.inspectionId || appointment.status === 'completed' || appointment.status === 'in_progress'
-                      ? 'View inspection'
-                      : 'Start inspection'}
+                      ? t("dashboard.viewInspection")
+                      : t("dashboard.startInspection")}
                     <ChevronRight className="h-3.5 w-3.5" />
                   </div>
                 </div>

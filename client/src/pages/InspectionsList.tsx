@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { trpc } from "@/lib/trpc";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,24 +15,12 @@ import {
   MapPin,
 } from "lucide-react";
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  completed: { label: "Completed", color: "#22c55e", icon: <CheckCircle2 size={14} /> },
-  report_sent: { label: "Report Sent", color: "#6366f1", icon: <FileText size={14} /> },
-  in_progress: { label: "In Progress", color: "#f59e0b", icon: <Clock size={14} /> },
-  draft: { label: "Draft", color: "#94a3b8", icon: <AlertCircle size={14} /> },
-};
+// STATUS_CONFIG is built inside the component so labels can use t()
 
-const TYPE_LABELS: Record<string, string> = {
-  new_routine: "Routine",
-  new_move_in: "Move-In",
-  new_vacate: "Vacate",
-  new_full: "Full",
-  new_inventory: "Inventory",
-  new_chattels: "Chattels",
-  update_based_on_previous: "Update",
-};
+// TYPE_LABELS is built inside the component so labels can use t()
 
 export default function InspectionsList() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { data: inspections, isLoading } = trpc.inspections.list.useQuery({});
 
@@ -44,6 +33,23 @@ export default function InspectionsList() {
       }, {})
     : {};
 
+  const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+    completed: { label: t("inspections.filterCompleted"), color: "#22c55e", icon: <CheckCircle2 size={14} /> },
+    report_sent: { label: t("common.sent"), color: "#6366f1", icon: <FileText size={14} /> },
+    in_progress: { label: t("inspections.filterInProgress"), color: "#f59e0b", icon: <Clock size={14} /> },
+    draft: { label: t("common.draft"), color: "#94a3b8", icon: <AlertCircle size={14} /> },
+  };
+
+  const TYPE_LABELS: Record<string, string> = {
+    new_routine: t("inspections.routine"),
+    new_move_in: t("inspections.moveIn"),
+    new_vacate: t("inspections.vacate"),
+    new_full: "Full",
+    new_inventory: "Inventory",
+    new_chattels: "Chattels",
+    update_based_on_previous: "Update",
+  };
+
   const statusOrder = ["in_progress", "draft", "completed", "report_sent"];
 
   return (
@@ -55,10 +61,10 @@ export default function InspectionsList() {
             className="font-anton text-3xl md:text-4xl uppercase tracking-tight"
             style={{ color: "var(--black)", lineHeight: 1 }}
           >
-            Inspections
+            {t("inspections.title")}
           </h1>
           <p className="font-archivo text-sm mt-1" style={{ color: "var(--muted)" }}>
-            {isLoading ? "Loading…" : `${inspections?.length ?? 0} inspection${inspections?.length !== 1 ? "s" : ""} total`}
+            {isLoading ? t("common.loading") : `${inspections?.length ?? 0} ${t("inspections.allInspections").toLowerCase()}`}
           </p>
         </div>
         <Button
@@ -66,7 +72,7 @@ export default function InspectionsList() {
           className="font-archivo font-bold text-xs uppercase tracking-widest"
           style={{ background: "var(--pink)", color: "#fff", border: "none" }}
         >
-          <Plus size={14} className="mr-1" /> New
+          <Plus size={14} className="mr-1" /> {t("dashboard.newInspection")}
         </Button>
       </div>
 
@@ -82,7 +88,7 @@ export default function InspectionsList() {
           style={{ background: "var(--card)", border: "1.5px solid var(--border)" }}
         >
           <ClipboardList size={40} className="mx-auto mb-3" style={{ color: "var(--muted)" }} />
-          <p className="font-anton text-xl uppercase" style={{ color: "var(--black)" }}>No inspections yet</p>
+          <p className="font-anton text-xl uppercase" style={{ color: "var(--black)" }}>{t("inspections.noInspections")}</p>
           <p className="font-archivo text-sm mt-1 mb-4" style={{ color: "var(--muted)" }}>
             Start from the Dashboard to schedule your first inspection.
           </p>
