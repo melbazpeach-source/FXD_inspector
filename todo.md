@@ -760,3 +760,14 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 ## Improvements Page Fix
 - [x] Wire ImprovementRecommendations page to real improvements DB table via tRPC router
 - [x] Ensure seeded data for 14 Rata Street is visible on the page
+
+## Owners Page Rebuild
+- [x] Responsive two-panel layout (owner list left, detail right on desktop)
+- [x] Mobile: tap owner to open detail, back button to return to list
+- [x] Push to CRM button on owner detail (Palace, Console, PropertyTree, standalone)
+- [x] Seed realistic owner data if missing
+
+## Landlord Portal Fix
+- [x] PM review/approve/reject workflow properly wired
+- [x] Correct draft/pm_approved/sent statuses in DB and UI
+- [x] Mobile-responsive layout (collapsible owner list, stacked tabs)

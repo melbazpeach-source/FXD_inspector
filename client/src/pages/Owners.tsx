@@ -166,10 +166,10 @@ export default function Owners() {
 
         {/* Left panel — hidden on mobile when detail is open */}
         <div
-          className={`flex-col border-r flex-shrink-0 ${isDetailView ? "hidden lg:flex" : "flex w-full"}`}
-          style={{ borderColor: "rgba(0,0,0,0.08)", background: "var(--cream)" }}
+          className={`flex-col border-r flex-shrink-0 ${isDetailView ? "hidden lg:flex" : "flex w-full lg:w-80"}`}
+          style={{ borderColor: "rgba(0,0,0,0.08)", background: "var(--cream)", width: undefined }}
         >
-          <div className="lg:w-80 w-full flex flex-col h-full">
+          <div className="w-full flex flex-col h-full">
             <div className="px-5 pt-6 pb-4 flex items-center justify-between flex-shrink-0">
               <div>
                 <h1 className="font-anton text-2xl" style={{ color: "var(--black)", letterSpacing: "-0.01em" }}>OWNERS</h1>

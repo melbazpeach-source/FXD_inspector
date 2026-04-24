@@ -173,11 +173,10 @@ export default function LandlordPortal() {
         {/* On mobile: full-width when showOwnerList=true, hidden when detail is open */}
         {/* On lg+: always visible as fixed-width sidebar */}
         <div
-          className={`flex-shrink-0 border-b lg:border-b-0 lg:border-r ${showOwnerList ? "flex" : "hidden"} lg:flex flex-col`}
-          style={{ width: "100%", maxWidth: "100%", borderColor: "rgba(0,0,0,0.08)", background: "var(--cream)" }}
+          className={`flex-shrink-0 border-b lg:border-b-0 lg:border-r ${showOwnerList ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-72`}
+          style={{ borderColor: "rgba(0,0,0,0.08)", background: "var(--cream)" }}
         >
-          {/* Make it a fixed sidebar on lg */}
-          <div className="lg:w-72 w-full flex flex-col h-full">
+          <div className="w-full flex flex-col h-full">
             <div className="px-5 pt-5 pb-4 flex-shrink-0">
               <h1 className="font-anton text-2xl" style={{ color: "var(--black)", letterSpacing: "-0.01em" }}>
                 LANDLORD PORTAL
