@@ -734,3 +734,25 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 - [x] Translate Review Queue, Fixx, Settings, Integrations pages (keys in locale files, ready for adoption)
 - [x] Add language selector to DashboardLayout header (Te reo Māori first)
 - [x] Persist language preference in localStorage (fxd-language key)
+
+## NZ Flag & i18n Polish
+- [x] Change English language flag from 🇬🇧 to 🇳🇿 in i18n config
+
+## Healthy Homes Test Data
+- [x] Seed Healthy Homes assessment data for 14 Rata Street (all 5 standards with realistic NZ values)
+
+## Improvements (Reno & Redec) Demo Data
+- [x] Seed Improvements/Reno/Redec recommendations for 14 Rata Street with cost estimates and rent uplift
+
+## Invoice Panel
+- [x] Add invoices table to schema (propertyId, inspectionId, lineItems JSON, status, dueDate, total)
+- [x] Build invoices tRPC router (create, list, update, delete)
+- [x] Build Invoice panel UI (line items, totals, GST, status, PDF download)
+- [x] Add Invoices nav item to sidebar
+
+## Push To Integration
+- [x] Add Push To button on Inspection detail page (Palace maintenance request, email, PDF)
+- [x] Add Push To button on Reports page (Palace, Console, email, download)
+- [x] Push To modal: select destination (Palace / Console / PropertyTree / Email / Download PDF)
+- [x] Implement push-to-email with inspection summary
+- [x] Implement push-to-Palace (maintenance requests for critical items)

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import PushToPanel from "@/components/PushToPanel";
 import {
   FileText,
   ExternalLink,
@@ -131,6 +132,11 @@ export default function Reports() {
                 </div>
               </div>
 
+              {/* Push To (compact) */}
+              <div className="px-5 pb-3 border-t" style={{ borderColor: "var(--border)", paddingTop: 12 }}>
+                <div className="font-archivo text-xs mb-2" style={{ color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Push To</div>
+                <PushToPanel inspectionId={inspection.id} compact />
+              </div>
               {/* Expanded AI descriptions */}
               {expandedId === inspection.id && (
                 <InspectionAiSummary inspectionId={inspection.id} />

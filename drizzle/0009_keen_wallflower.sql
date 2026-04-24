@@ -1,0 +1,43 @@
+CREATE TABLE `improvements` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`property_id` int NOT NULL,
+	`inspection_id` int,
+	`category` enum('kitchen','bathroom','flooring','exterior','interior','landscaping','roofing','other') NOT NULL DEFAULT 'other',
+	`title` varchar(256) NOT NULL,
+	`description` text,
+	`priority` enum('urgent','high','medium','low') NOT NULL DEFAULT 'medium',
+	`estimated_cost_min` int,
+	`estimated_cost_max` int,
+	`potential_rent_uplift` int,
+	`roi_months` int,
+	`status` enum('recommended','approved','in_progress','completed','deferred') DEFAULT 'recommended',
+	`ai_generated` boolean DEFAULT false,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `improvements_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `invoices` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`property_id` int NOT NULL,
+	`inspection_id` int,
+	`invoice_number` varchar(64) NOT NULL,
+	`issue_date` timestamp NOT NULL,
+	`due_date` timestamp NOT NULL,
+	`status` enum('draft','sent','paid','overdue','cancelled') DEFAULT 'draft',
+	`recipient_name` varchar(256),
+	`recipient_email` varchar(256),
+	`recipient_address` text,
+	`line_items` json NOT NULL,
+	`subtotal_cents` int NOT NULL DEFAULT 0,
+	`gst_cents` int NOT NULL DEFAULT 0,
+	`total_cents` int NOT NULL DEFAULT 0,
+	`notes` text,
+	`pushed_to_palace` boolean DEFAULT false,
+	`pushed_at` timestamp,
+	`pdf_url` text,
+	`pdf_storage_key` varchar(512),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `invoices_id` PRIMARY KEY(`id`)
+);

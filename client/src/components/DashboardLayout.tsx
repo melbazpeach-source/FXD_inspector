@@ -25,6 +25,7 @@ import {
   CheckSquare,
   Flame,
   Languages,
+  Receipt,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -91,6 +92,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
         { icon: TrendingUp, label: t("nav.rentAppraisal"), href: "/rental-appraisal" },
         { icon: Sparkles,   label: t("nav.improvements"), href: "/improvements" },
         { icon: FileText,   label: t("nav.reports"),      href: "/reports" },
+        { icon: Receipt,    label: "Invoices",             href: "/invoices" },
       ],
     },
     {

@@ -22,6 +22,7 @@ import MaintenancePlan from "./pages/MaintenancePlan";
 import RentalAppraisal from "./pages/RentalAppraisal";
 import PMReviewQueue from "./pages/PMReviewQueue";
 import ImprovementRecommendations from "./pages/ImprovementRecommendations";
+import Invoices from "./pages/Invoices";
 import SmokeAlarms from "@/pages/SmokeAlarms";
 import Owners from "@/pages/Owners";
 import LandlordPortal from "@/pages/LandlordPortal";
@@ -94,6 +95,9 @@ function AppRoutes() {
 
       {/* Improvement Recommendations */}
       <Route path="/improvements" component={withLayout(ImprovementRecommendations)} />
+
+      {/* Invoices */}
+      <Route path="/invoices" component={withLayout(Invoices)} />
 
       {/* Integrations */}
       <Route path="/integrations" component={withLayout(Integrations)} />

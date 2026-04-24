@@ -565,3 +565,59 @@ export const marketingPhotos = mysqlTable("marketing_photos", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type MarketingPhoto = typeof marketingPhotos.$inferSelect;
+
+// ─── Improvements (Reno & Redec Recommendations) ──────────────────────────────
+export const improvements = mysqlTable("improvements", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("property_id").notNull(),
+  inspectionId: int("inspection_id"),
+  category: mysqlEnum("category", ["kitchen", "bathroom", "flooring", "exterior", "interior", "landscaping", "roofing", "other"]).notNull().default("other"),
+  title: varchar("title", { length: 256 }).notNull(),
+  description: text("description"),
+  priority: mysqlEnum("priority", ["urgent", "high", "medium", "low"]).notNull().default("medium"),
+  estimatedCostMin: int("estimated_cost_min"),
+  estimatedCostMax: int("estimated_cost_max"),
+  potentialRentUplift: int("potential_rent_uplift"), // $/week
+  roiMonths: int("roi_months"),
+  status: mysqlEnum("status", ["recommended", "approved", "in_progress", "completed", "deferred"]).default("recommended"),
+  aiGenerated: boolean("ai_generated").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Improvement = typeof improvements.$inferSelect;
+
+// ─── Invoices ─────────────────────────────────────────────────────────────────
+export const invoices = mysqlTable("invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("property_id").notNull(),
+  inspectionId: int("inspection_id"),
+  invoiceNumber: varchar("invoice_number", { length: 64 }).notNull(),
+  issueDate: timestamp("issue_date").notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  status: mysqlEnum("status", ["draft", "sent", "paid", "overdue", "cancelled"]).default("draft"),
+  // Recipient
+  recipientName: varchar("recipient_name", { length: 256 }),
+  recipientEmail: varchar("recipient_email", { length: 256 }),
+  recipientAddress: text("recipient_address"),
+  // Line items stored as JSON
+  lineItems: json("line_items").$type<Array<{
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    gst: boolean;
+  }>>().notNull(),
+  // Totals (in cents to avoid float issues)
+  subtotalCents: int("subtotal_cents").notNull().default(0),
+  gstCents: int("gst_cents").notNull().default(0),
+  totalCents: int("total_cents").notNull().default(0),
+  // Notes
+  notes: text("notes"),
+  // Push to tracking
+  pushedToPalace: boolean("pushed_to_palace").default(false),
+  pushedAt: timestamp("pushed_at"),
+  pdfUrl: text("pdf_url"),
+  pdfStorageKey: varchar("pdf_storage_key", { length: 512 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Invoice = typeof invoices.$inferSelect;

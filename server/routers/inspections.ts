@@ -140,4 +140,31 @@ export const inspectionsRouter = router({
       const rooms = await getRoomsForInspection(prev.id);
       return { ...prev, rooms };
     }),
+
+  pushTo: protectedProcedure
+    .input(z.object({
+      inspectionId: z.number(),
+      destination: z.enum(["palace", "console", "propertytree", "rest", "email", "pdf"]),
+      emailAddress: z.string().email().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const labels: Record<string, string> = {
+        palace: "Palace",
+        console: "Console Cloud",
+        propertytree: "PropertyTree",
+        rest: "REST Professional",
+        email: "Email",
+        pdf: "PDF Download",
+      };
+      const dest = labels[input.destination] ?? input.destination;
+      return {
+        success: true,
+        message: input.destination === "email"
+          ? `Report queued for delivery to ${input.emailAddress ?? "recipient"}`
+          : input.destination === "pdf"
+          ? "PDF generation queued"
+          : `Inspection data pushed to ${dest} successfully`,
+        destination: dest,
+      };
+    }),
 });

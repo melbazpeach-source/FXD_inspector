@@ -12,7 +12,7 @@ import si from "./locales/si";
 
 export const SUPPORTED_LANGUAGES = [
   { code: "mi", name: "Te reo Māori", flag: "🌿", nativeName: "Te reo Māori" },
-  { code: "en", name: "English", flag: "🇬🇧", nativeName: "English" },
+  { code: "en", name: "English", flag: "🇳🇿", nativeName: "English" },
   { code: "sm", name: "Samoan", flag: "🇼🇸", nativeName: "Gagana Sāmoa" },
   { code: "to", name: "Tongan", flag: "🇹🇴", nativeName: "Lea faka-Tonga" },
   { code: "zh", name: "Mandarin", flag: "🇨🇳", nativeName: "普通话" },

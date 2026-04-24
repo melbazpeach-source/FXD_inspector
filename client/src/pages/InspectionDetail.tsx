@@ -25,6 +25,7 @@ import {
   Camera,
   Mic,
 } from "lucide-react";
+import PushToPanel from "@/components/PushToPanel";
 
 const INSPECTION_TYPE_LABELS: Record<string, string> = {
   update_based_on_previous: "Update Based on Previous",
@@ -311,6 +312,11 @@ export default function InspectionDetail({ id }: { id: number }) {
           </div>
         </div>
       )}
+
+      {/* Push To */}
+      <div className="mb-6">
+        <PushToPanel inspectionId={id} />
+      </div>
 
       {/* Add Room Dialog */}
       <Dialog open={addRoomOpen} onOpenChange={setAddRoomOpen}>
