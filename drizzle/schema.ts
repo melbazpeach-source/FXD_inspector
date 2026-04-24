@@ -621,3 +621,56 @@ export const invoices = mysqlTable("invoices", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type Invoice = typeof invoices.$inferSelect;
+
+/// ─── Provider Settings (LLM / Voice / OCR / Floor Plans switcher) ─────────────
+export const providerSettings = mysqlTable("provider_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  category: mysqlEnum("category", ["llm", "voice", "ocr", "floor_plans"]).notNull(),
+  provider: varchar("provider", { length: 64 }).notNull(),
+  isActive: boolean("is_active").default(false),
+  apiKey: text("api_key"),
+  config: json("config").$type<Record<string, string>>(),
+  testedAt: timestamp("tested_at"),
+  testStatus: mysqlEnum("test_status", ["ok", "error", "untested"]).default("untested"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ProviderSetting = typeof providerSettings.$inferSelect;
+
+// ─── Agent Configs (owner-only) ───────────────────────────────────────────────
+export const agentConfigs = mysqlTable("agent_configs", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: varchar("agent_id", { length: 64 }).notNull().unique(),
+  name: varchar("name", { length: 128 }).notNull(),
+  description: text("description"),
+  skills: json("skills").$type<string[]>().default([]),
+  connectors: json("connectors").$type<string[]>().default([]),
+  systemPrompt: text("system_prompt"),
+  preferredLlmProvider: varchar("preferred_llm_provider", { length: 64 }).default("builtin"),
+  isEnabled: boolean("is_enabled").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AgentConfig = typeof agentConfigs.$inferSelect;
+
+// ─── Skills Library ───────────────────────────────────────────────────────────
+export const skills = mysqlTable("skills", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 128 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 64 }),
+  isBuiltIn: boolean("is_built_in").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type Skill = typeof skills.$inferSelect;
+
+// ─── Connectors ───────────────────────────────────────────────────────────────
+export const connectors = mysqlTable("connectors", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 128 }).notNull(),
+  type: varchar("type", { length: 64 }).notNull(),
+  config: json("config").$type<Record<string, string>>(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type Connector = typeof connectors.$inferSelect;

@@ -2,7 +2,10 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
   CheckCircle2,
   ChevronDown,
@@ -13,8 +16,23 @@ import {
   Settings2,
   TestTube2,
   Zap,
+  Brain,
+  Mic,
+  ScanText,
+  Map,
+  Shield,
+  Plug,
+  Bot,
+  Eye,
+  EyeOff,
+  ToggleLeft,
+  ToggleRight,
+  Pencil,
+  Save,
+  X,
 } from "lucide-react";
 
+// ── Platform Configs ───────────────────────────────────────────────────────────
 const PLATFORMS = [
   {
     key: "palace" as const,
@@ -51,7 +69,7 @@ const PLATFORMS = [
   },
   {
     key: "rest" as const,
-    name: "REST",
+    name: "REST Professional",
     description: "REST Professional — property management for NZ agencies",
     iconColor: "bg-orange-600",
     bgColor: "bg-orange-50 border-orange-200",
@@ -60,303 +78,469 @@ const PLATFORMS = [
       { key: "apiKey", label: "API Key", placeholder: "rp_...", type: "password" },
     ],
   },
-  {
-    key: "test" as const,
-    name: "Test / Sandbox",
-    description: "Sandbox environment for development and testing — no real data",
-    iconColor: "bg-amber-500",
-    bgColor: "bg-amber-50 border-amber-200",
-    fields: [
-      { key: "apiEndpoint", label: "Sandbox URL", placeholder: "https://sandbox.fxdinspector.io/api" },
-      { key: "apiKey", label: "Test Key", placeholder: "test_...", type: "password" },
-    ],
-  },
 ];
 
+// ── Provider category metadata ─────────────────────────────────────────────────
+const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; description: string }> = {
+  llm: {
+    label: "AI Language Model",
+    icon: <Brain className="h-5 w-5" />,
+    description: "Powers Fixx chat, report drafting, and all AI analysis features.",
+  },
+  voice: {
+    label: "Voice Transcription",
+    icon: <Mic className="h-5 w-5" />,
+    description: "Converts voice notes during inspections to text.",
+  },
+  ocr: {
+    label: "OCR / Document Reading",
+    icon: <ScanText className="h-5 w-5" />,
+    description: "Extracts text from photos, certificates, and uploaded PDFs.",
+  },
+  floor_plans: {
+    label: "Floor Plans",
+    icon: <Map className="h-5 w-5" />,
+    description: "Generates floor plans from room scans.",
+  },
+};
+
+const SKILL_CATEGORY_COLORS: Record<string, string> = {
+  data: "bg-blue-100 text-blue-700",
+  write: "bg-green-100 text-green-700",
+  integration: "bg-purple-100 text-purple-700",
+  ai: "bg-orange-100 text-orange-700",
+};
+
+// ── Main Component ─────────────────────────────────────────────────────────────
 export default function Integrations() {
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [formValues, setFormValues] = useState<Record<string, Record<string, string>>>({});
-  const [syncing, setSyncing] = useState<string | null>(null);
-  const [testing, setTesting] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<"providers" | "platforms" | "admin">("providers");
+  const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null);
+  const [platformConfigs, setPlatformConfigs] = useState<Record<string, Record<string, string>>>({});
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+  const [editingAgent, setEditingAgent] = useState<string | null>(null);
+  const [agentPromptDraft, setAgentPromptDraft] = useState("");
 
-  const { data: configs, isLoading, refetch } = trpc.integrations.list.useQuery();
-  const configure = trpc.integrations.configure.useMutation({
-    onSuccess: () => {
-      toast.success("Integration saved");
-      refetch();
-    },
-    onError: (e) => toast.error(e.message),
+  // ── tRPC queries ─────────────────────────────────────────────────────────────
+  const { data: integrationList } = trpc.integrations.list.useQuery();
+  const { data: providers, refetch: refetchProviders } = trpc.admin.listProviders.useQuery(undefined, {
+    enabled: activeTab === "providers" || activeTab === "admin",
   });
-  const testConnection = trpc.integrations.testConnection.useMutation({
-    onSuccess: (data) => {
-      setTesting(null);
-      if (data.success) {
-        toast.success(`Connection successful! ${data.message ?? ""}`);
-      } else {
-        toast.error(`Connection failed: ${data.message ?? "Unknown error"}`);
-      }
-    },
-    onError: (e) => {
-      setTesting(null);
-      toast.error(e.message);
-    },
+  const { data: skillsList } = trpc.admin.listSkills.useQuery(undefined, { enabled: activeTab === "admin" });
+  const { data: connectorsList, refetch: refetchConnectors } = trpc.admin.listConnectors.useQuery(undefined, { enabled: activeTab === "admin" });
+  const { data: agentsList, refetch: refetchAgents } = trpc.admin.listAgents.useQuery(undefined, { enabled: activeTab === "admin" });
+
+  const setActiveProvider = trpc.admin.setActiveProvider.useMutation({
+    onSuccess: () => { refetchProviders(); toast.success("Active provider updated"); },
+    onError: () => toast.error("Failed to update provider"),
   });
-  const syncNow = trpc.integrations.sync.useMutation({
-    onSuccess: (data) => {
-      setSyncing(null);
-      if (data.success) {
-        toast.success(data.message ?? "Sync complete");
-      } else {
-        toast.error(data.message ?? "Sync failed");
-      }
-      refetch();
-    },
-    onError: (e) => {
-      setSyncing(null);
-      toast.error(e.message);
-    },
+  const saveProviderKey = trpc.admin.saveProviderKey.useMutation({
+    onSuccess: () => { refetchProviders(); toast.success("API key saved"); },
+    onError: () => toast.error("Failed to save key"),
+  });
+  const testProvider = trpc.admin.testProvider.useMutation({
+    onSuccess: (d) => { refetchProviders(); toast.success(`Test ${d.status === "ok" ? "passed ✓" : "failed"}`); },
+    onError: () => toast.error("Test failed"),
+  });
+  const toggleConnector = trpc.admin.toggleConnector.useMutation({
+    onSuccess: () => { refetchConnectors(); toast.success("Connector updated"); },
+  });
+  const updateAgent = trpc.admin.updateAgent.useMutation({
+    onSuccess: () => { refetchAgents(); setEditingAgent(null); toast.success("Agent updated"); },
+    onError: () => toast.error("Failed to update agent"),
   });
 
-  function getConfig(platform: string) {
-    return configs?.find((c) => c.platform === platform);
-  }
+  const configureMutation = trpc.integrations.configure.useMutation({
+    onSuccess: () => toast.success("Integration saved"),
+    onError: () => toast.error("Failed to save"),
+  });
+  const testMutation = trpc.integrations.testConnection.useMutation({
+    onSuccess: (d) => toast[d.success ? "success" : "error"](d.message),
+    onError: () => toast.error("Connection test failed"),
+  });
 
-  function getFormValue(platform: string, field: string) {
-    return formValues[platform]?.[field] ?? "";
-  }
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  const isOwner = !!user;
+  const providersByCategory = providers
+    ? providers.reduce<Record<string, typeof providers>>((acc, p) => {
+        if (!acc[p.category]) acc[p.category] = [];
+        acc[p.category].push(p);
+        return acc;
+      }, {})
+    : {};
 
-  function setFormValue(platform: string, field: string, value: string) {
-    setFormValues((prev) => ({
-      ...prev,
-      [platform]: { ...(prev[platform] ?? {}), [field]: value },
-    }));
-  }
-
-  function handleSave(platform: (typeof PLATFORMS)[number]["key"]) {
-    const values = formValues[platform] ?? {};
-    configure.mutate({
-      platform,
-      apiEndpoint: values.apiEndpoint || undefined,
-      apiKey: values.apiKey || undefined,
-      isEnabled: true,
-    });
-  }
+  const tabs = [
+    { id: "providers" as const, label: "AI Providers", icon: <Brain className="h-4 w-4" /> },
+    { id: "platforms" as const, label: "Property Platforms", icon: <Link2 className="h-4 w-4" /> },
+    ...(isOwner ? [{ id: "admin" as const, label: "Admin", icon: <Shield className="h-4 w-4" /> }] : []),
+  ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold text-foreground mb-1">Integrations</h1>
-        <p className="text-muted-foreground text-sm">
-          Connect FXD Inspector to your NZ property management platform to sync appointments and properties.
-        </p>
-      </div>
-
-      {/* Active connections summary */}
-      {!isLoading && configs && configs.some((c) => c.isEnabled) && (
-        <div className="bg-card rounded-xl border border-border p-5 mb-6">
-          <h2 className="font-display text-sm font-semibold text-foreground mb-3">Active Connections</h2>
-          <div className="flex flex-wrap gap-2">
-            {configs
-              .filter((c) => c.isEnabled)
-              .map((c) => {
-                const platform = PLATFORMS.find((p) => p.key === c.platform);
-                return (
-                  <div
-                    key={c.platform}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-xs font-medium"
-                  >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    {platform?.name ?? c.label}
-                    {c.lastSyncedAt && (
-                      <span className="text-green-500">
-                        · synced {new Date(c.lastSyncedAt).toLocaleDateString("en-NZ")}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
+    <DashboardLayout>
+      <div className="p-6 max-w-5xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Integrations</h1>
+          <p className="text-muted-foreground mt-1">Connect services, configure AI providers, and manage agent capabilities.</p>
         </div>
-      )}
 
-      {/* Platform cards */}
-      <div className="space-y-3">
-        {PLATFORMS.map((platform) => {
-          const config = getConfig(platform.key);
-          const isExpanded = expanded === platform.key;
-          const isConnected = config?.isEnabled;
-          const syncStatus = config?.syncStatus;
-
-          return (
-            <div
-              key={platform.key}
-              className={`bg-card rounded-xl border overflow-hidden transition-all ${
-                isConnected ? "border-green-200" : "border-border"
+        {/* Tab bar */}
+        <div className="flex gap-1 mb-6 border-b border-border">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              {/* Header row */}
-              <div
-                className="p-5 flex items-center gap-4 cursor-pointer hover:bg-muted/30 transition-colors"
-                onClick={() => setExpanded(isExpanded ? null : platform.key)}
-              >
-                <div className={`h-10 w-10 rounded-xl ${platform.iconColor} flex items-center justify-center shrink-0`}>
-                  <Link2 className="h-5 w-5 text-white" />
-                </div>
+              {tab.icon}
+              {tab.label}
+              {tab.id === "admin" && (
+                <Badge variant="outline" className="text-xs ml-1 border-amber-400 text-amber-600">Owner only</Badge>
+              )}
+            </button>
+          ))}
+        </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <p className="font-medium text-foreground text-sm">{platform.name}</p>
-                    {isConnected ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
-                        Connected
-                      </span>
-                    ) : (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                        Not connected
-                      </span>
-                    )}
-                    {syncStatus === "error" && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">
-                        Sync error
-                      </span>
-                    )}
+        {/* ── PROVIDERS TAB ─────────────────────────────────────────────────── */}
+        {activeTab === "providers" && (
+          <div className="space-y-8">
+            {Object.entries(CATEGORY_META).map(([cat, meta]) => {
+              const catProviders = providersByCategory[cat] || [];
+              const active = catProviders.find((p) => p.isActive);
+              return (
+                <div key={cat} className="bg-card border border-border rounded-xl p-5">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary">{meta.icon}</div>
+                    <div>
+                      <h2 className="font-semibold text-foreground">{meta.label}</h2>
+                      <p className="text-sm text-muted-foreground">{meta.description}</p>
+                      {active && (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600 mt-1">
+                          <CheckCircle2 className="h-3 w-3" /> Active: {active.provider}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{platform.description}</p>
+                  <div className="grid gap-3">
+                    {catProviders.map((p) => {
+                      const keyId = `${cat}-${p.provider}`;
+                      const [keyVal, setKeyVal] = useState(p.apiKey || "");
+                      const isBuiltIn = ["builtin", "whisper", "builtin_vision", "magicplan"].includes(p.provider);
+                      const cfg = p.config as any;
+                      return (
+                        <div
+                          key={p.provider}
+                          className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                            p.isActive ? "border-primary/40 bg-primary/5" : "border-border bg-background"
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm text-foreground">{cfg?.label || p.provider}</span>
+                              {p.isActive && <Badge className="text-xs bg-green-100 text-green-700 border-0">Active</Badge>}
+                              {p.testStatus === "ok" && !p.isActive && (
+                                <Badge variant="outline" className="text-xs text-green-600 border-green-300">Tested ✓</Badge>
+                              )}
+                              {isBuiltIn && <Badge variant="outline" className="text-xs">Built-in</Badge>}
+                            </div>
+                            {cfg?.description && <p className="text-xs text-muted-foreground mt-0.5">{cfg.description}</p>}
+                            {cfg?.models && <p className="text-xs text-muted-foreground mt-0.5">Models: {cfg.models}</p>}
+                          </div>
+                          {!isBuiltIn && (
+                            <div className="flex items-center gap-2">
+                              <div className="relative">
+                                <Input
+                                  type={showKeys[keyId] ? "text" : "password"}
+                                  placeholder="API Key"
+                                  value={keyVal}
+                                  onChange={(e) => setKeyVal(e.target.value)}
+                                  className="h-8 text-xs w-40 pr-8"
+                                />
+                                <button
+                                  onClick={() => setShowKeys((s) => ({ ...s, [keyId]: !s[keyId] }))}
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                >
+                                  {showKeys[keyId] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                </button>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 text-xs"
+                                onClick={() => saveProviderKey.mutate({ category: cat as any, provider: p.provider, apiKey: keyVal })}
+                              >
+                                <Save className="h-3 w-3 mr-1" /> Save
+                              </Button>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs"
+                              onClick={() => testProvider.mutate({ category: cat as any, provider: p.provider })}
+                            >
+                              <TestTube2 className="h-3 w-3 mr-1" /> Test
+                            </Button>
+                            {!p.isActive && (
+                              <Button
+                                size="sm"
+                                className="h-8 text-xs"
+                                onClick={() => setActiveProvider.mutate({ category: cat as any, provider: p.provider })}
+                              >
+                                <Zap className="h-3 w-3 mr-1" /> Use
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+        )}
 
-                <div className="flex items-center gap-2 shrink-0">
-                  {isConnected && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSyncing(platform.key);
-                        syncNow.mutate({ platform: platform.key });
-                      }}
-                      disabled={syncing === platform.key}
-                      title="Sync now"
-                      className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
-                    >
-                      <RefreshCw
-                        className={`h-3.5 w-3.5 text-muted-foreground ${
-                          syncing === platform.key ? "animate-spin" : ""
-                        }`}
-                      />
-                    </button>
-                  )}
-                  {isExpanded ? (
-                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-              </div>
-
-              {/* Expanded config */}
-              {isExpanded && (
-                <div className={`border-t border-border p-5 ${platform.bgColor}`}>
-                  <div className="space-y-3 max-w-lg">
-                    {platform.fields.map((field) => (
-                      <div key={field.key}>
-                        <label className="text-xs font-medium text-foreground mb-1.5 block">
-                          {field.label}
-                        </label>
-                        <Input
-                          type={field.type ?? "text"}
-                          placeholder={field.placeholder}
-                          value={getFormValue(platform.key, field.key)}
-                          onChange={(e) => setFormValue(platform.key, field.key, e.target.value)}
-                          className="bg-background"
-                        />
+        {/* ── PLATFORMS TAB ─────────────────────────────────────────────────── */}
+        {activeTab === "platforms" && (
+          <div className="space-y-4">
+            {PLATFORMS.map((platform) => {
+              const integration = integrationList?.find((i) => i.platform === platform.key);
+              const isExpanded = expandedPlatform === platform.key;
+              const isConnected = integration?.isEnabled && integration?.hasCredentials;
+              return (
+                <div key={platform.key} className={`rounded-xl border p-4 ${platform.bgColor}`}>
+                  <div
+                    className="flex items-center gap-3 cursor-pointer"
+                    onClick={() => setExpandedPlatform(isExpanded ? null : platform.key)}
+                  >
+                    <div className={`w-10 h-10 rounded-lg ${platform.iconColor} flex items-center justify-center text-white font-bold text-sm`}>
+                      {platform.name.slice(0, 2)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground">{platform.name}</span>
+                        {isConnected ? (
+                          <Badge className="bg-green-100 text-green-700 border-0 text-xs">Connected</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs">Not connected</Badge>
+                        )}
                       </div>
-                    ))}
+                      <p className="text-xs text-muted-foreground">{platform.description}</p>
+                    </div>
+                    {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  </div>
 
-                    <div className="flex gap-2 pt-2 flex-wrap">
-                      <Button
-                        size="sm"
-                        onClick={() => handleSave(platform.key)}
-                        disabled={configure.isPending}
-                        className="bg-primary text-primary-foreground"
-                      >
-                        {configure.isPending ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
-                        ) : (
-                          <Settings2 className="h-3.5 w-3.5 mr-2" />
-                        )}
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setTesting(platform.key);
-                          testConnection.mutate({ platform: platform.key });
-                        }}
-                        disabled={testing === platform.key || testConnection.isPending}
-                      >
-                        {testing === platform.key ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
-                        ) : (
-                          <TestTube2 className="h-3.5 w-3.5 mr-2" />
-                        )}
-                        Test Connection
-                      </Button>
-                      {isConnected && (
+                  {isExpanded && (
+                    <div className="mt-4 space-y-3 pt-4 border-t border-black/10">
+                      {platform.fields.map((field) => (
+                        <div key={field.key}>
+                          <label className="text-xs font-medium text-foreground mb-1 block">{field.label}</label>
+                          <Input
+                            type={field.type || "text"}
+                            placeholder={field.placeholder}
+                            defaultValue={""}
+                            onChange={(e) =>
+                              setPlatformConfigs((prev) => ({
+                                ...prev,
+                                [platform.key]: { ...(prev[platform.key] || {}), [field.key]: e.target.value },
+                              }))
+                            }
+                            className="bg-white/80"
+                          />
+                        </div>
+                      ))}
+                      <div className="flex gap-2 pt-1">
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            configureMutation.mutate({
+                              platform: platform.key,
+                              ...(platformConfigs[platform.key] || {}),
+                            })
+                          }
+                          disabled={configureMutation.isPending}
+                        >
+                          {configureMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Settings2 className="h-3 w-3 mr-1" />}
+                          Save
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => {
-                            setSyncing(platform.key);
-                            syncNow.mutate({ platform: platform.key });
-                          }}
-                          disabled={syncing === platform.key}
+                          onClick={() => testMutation.mutate({ platform: platform.key })}
+                          disabled={testMutation.isPending}
                         >
-                          <RefreshCw className="h-3.5 w-3.5 mr-2" />
-                          Sync Now
+                          {testMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <TestTube2 className="h-3 w-3 mr-1" />}
+                          Test Connection
                         </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── ADMIN TAB (owner only) ─────────────────────────────────────────── */}
+        {activeTab === "admin" && (
+          <div className="space-y-8">
+            {/* Connectors */}
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Plug className="h-5 w-5 text-primary" /> Connectors
+              </h2>
+              <div className="grid gap-2">
+                {connectorsList?.map((c) => (
+                  <div key={c.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
+                    <div className="flex-1">
+                      <span className="font-medium text-sm text-foreground">{c.name}</span>
+                      <span className="ml-2 text-xs text-muted-foreground capitalize">{c.type.replace("_", " ")}</span>
+                    </div>
+                    <button
+                      onClick={() => toggleConnector.mutate({ id: c.id, isActive: !c.isActive })}
+                      className={`flex items-center gap-1 text-sm font-medium transition-colors ${c.isActive ? "text-green-600" : "text-muted-foreground"}`}
+                    >
+                      {c.isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+                      {c.isActive ? "Active" : "Inactive"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Skills Library */}
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" /> Skills Library
+              </h2>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {skillsList?.map((s) => (
+                  <div key={s.id} className="flex items-start gap-3 p-3 bg-card border border-border rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm text-foreground">{s.name}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${SKILL_CATEGORY_COLORS[s.category || ""] || "bg-gray-100 text-gray-600"}`}>
+                          {s.category}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Agents */}
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Bot className="h-5 w-5 text-primary" /> Agents
+              </h2>
+              <div className="space-y-4">
+                {agentsList?.map((agent) => {
+                  const isEditing = editingAgent === agent.agentId;
+                  const agentSkills = (agent.skills as string[] | null) || [];
+                  const agentConnectors = (agent.connectors as string[] | null) || [];
+                  return (
+                    <div key={agent.agentId} className="bg-card border border-border rounded-xl p-5">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-foreground">{agent.name}</h3>
+                            <Badge variant={agent.isEnabled ? "default" : "secondary"} className="text-xs">
+                              {agent.isEnabled ? "Enabled" : "Disabled"}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-0.5">{agent.description}</p>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateAgent.mutate({ agentId: agent.agentId, isEnabled: !agent.isEnabled })}
+                          >
+                            {agent.isEnabled ? "Disable" : "Enable"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingAgent(isEditing ? null : agent.agentId);
+                              setAgentPromptDraft(agent.systemPrompt || "");
+                            }}
+                          >
+                            {isEditing ? <X className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        <span className="text-xs text-muted-foreground mr-1">LLM:</span>
+                        <Badge variant="outline" className="text-xs">{agent.preferredLlmProvider || "builtin"}</Badge>
+                      </div>
+
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Skills ({agentSkills.length})</p>
+                        <div className="flex flex-wrap gap-1">
+                          {agentSkills.map((sk) => (
+                            <span key={sk} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">{sk.replace(/_/g, " ")}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Connectors ({agentConnectors.length})</p>
+                        <div className="flex flex-wrap gap-1">
+                          {agentConnectors.map((cn) => (
+                            <span key={cn} className="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full">{cn.replace(/_/g, " ")}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {isEditing && (
+                        <div className="mt-3 pt-3 border-t border-border space-y-3">
+                          <div>
+                            <label className="text-xs font-medium text-foreground block mb-1">System Prompt</label>
+                            <textarea
+                              className="w-full text-xs p-2 border border-border rounded-lg bg-background text-foreground resize-none"
+                              rows={6}
+                              value={agentPromptDraft}
+                              onChange={(e) => setAgentPromptDraft(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-foreground block mb-1">Preferred LLM Provider</label>
+                            <select
+                              className="text-xs p-2 border border-border rounded-lg bg-background text-foreground w-full"
+                              defaultValue={agent.preferredLlmProvider || "builtin"}
+                              onChange={(e) => updateAgent.mutate({ agentId: agent.agentId, preferredLlmProvider: e.target.value })}
+                            >
+                              {(providersByCategory["llm"] || []).map((p) => (
+                                <option key={p.provider} value={p.provider}>{(p.config as any)?.label || p.provider}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => updateAgent.mutate({ agentId: agent.agentId, systemPrompt: agentPromptDraft })}
+                            disabled={updateAgent.isPending}
+                          >
+                            <Save className="h-3 w-3 mr-1" /> Save Changes
+                          </Button>
+                        </div>
                       )}
                     </div>
-
-                    {/* Webhook info */}
-                    <div className="mt-4 p-3 bg-background/80 rounded-lg border border-border">
-                      <p className="text-xs font-medium text-foreground mb-1">Webhook URL</p>
-                      <p className="text-xs text-muted-foreground font-mono break-all">
-                        {typeof window !== "undefined" ? window.location.origin : ""}/api/webhooks/{platform.key}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Configure this URL in your {platform.name} settings to enable automatic appointment sync.
-                      </p>
-                    </div>
-
-                    {/* Sync error */}
-                    {config?.syncError && (
-                      <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                        <p className="text-xs font-medium text-red-700 mb-1">Last sync error</p>
-                        <p className="text-xs text-red-600">{config.syncError}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                  );
+                })}
+              </div>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Info box */}
-      <div className="mt-6 bg-card rounded-xl border border-border p-5">
-        <div className="flex items-start gap-3">
-          <Zap className="h-5 w-5 text-accent shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-foreground mb-1">How sync works</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              When connected, FXD Inspector automatically imports scheduled inspections as appointment tiles on your dashboard.
-              Each appointment can be started as any inspection type. Completed reports can be pushed back to your platform.
-              Webhooks enable real-time sync — configure the webhook URL above in your property management software.
-            </p>
           </div>
-        </div>
+        )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

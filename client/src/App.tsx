@@ -23,6 +23,7 @@ import RentalAppraisal from "./pages/RentalAppraisal";
 import PMReviewQueue from "./pages/PMReviewQueue";
 import ImprovementRecommendations from "./pages/ImprovementRecommendations";
 import Invoices from "./pages/Invoices";
+import RemoteInspection from "./pages/RemoteInspection";
 import SmokeAlarms from "@/pages/SmokeAlarms";
 import Owners from "@/pages/Owners";
 import LandlordPortal from "@/pages/LandlordPortal";
@@ -73,6 +74,8 @@ function AppRoutes() {
 
       {/* PM Review Queue */}
       <Route path="/review-queue" component={withLayout(PMReviewQueue)} />
+      {/* Remote Inspections */}
+      <Route path="/remote-inspections" component={RemoteInspection} />
 
       {/* Chattels Register */}
       <Route path="/chattels" component={withLayout(Chattels)} />

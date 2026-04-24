@@ -26,6 +26,7 @@ import {
   Flame,
   Languages,
   Receipt,
+  Wifi,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -72,6 +73,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
         { icon: ClipboardList, label: t("nav.inspections"),    href: "/inspections" },
         { icon: Building2,     label: t("nav.properties"),     href: "/properties" },
         { icon: CheckSquare,   label: t("nav.reviewQueue"),    href: "/review-queue", badge: "PM" },
+        { icon: Wifi,          label: "Remote Inspections",    href: "/remote-inspections" },
         { icon: Users,         label: t("nav.landlordPortal"), href: "/landlord-portal", badge: "LL" },
       ],
     },

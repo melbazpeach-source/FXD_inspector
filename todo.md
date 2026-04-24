@@ -787,3 +787,50 @@ The solution: every routine inspection includes an automatic Healthy Homes compl
 - [x] Task categories (Routine, Seasonal, Compliance, Urgent)
 - [x] Mark tasks complete, defer, or escalate
 - [x] Seed realistic 12-month plan for 14 Rata Street (6 items)
+
+## Remote Inspection
+- [ ] Add remote_submissions table columns: checklist JSON (PM pushes rooms/items to tenant), submission_notes, status (pending/submitted/imported)
+- [ ] tRPC router: createRemoteLink (generates token + optional checklist), getSubmission, submitRemote (public), importSubmission (PM pulls into inspection)
+- [ ] PM UI: generate shareable link per inspection, optionally add checklist items before sending
+- [ ] Public submission page (/remote/:token) — no auth, tenant sees checklist, uploads photos + notes per room
+- [ ] PM review page: view submitted photos/notes, import into inspection with one click
+- [ ] Push notification to PM when tenant submits
+
+## Integrations UI — Provider Switcher
+- [ ] Add provider_settings table (category, provider, api_key_encrypted, is_active, config JSON)
+- [ ] tRPC router: getProviderSettings, updateProvider, testProvider
+- [ ] Integrations page: tabbed UI (LLM / Voice / Floor Plans / Property Platforms)
+- [ ] LLM tab: Built-in Manus, OpenAI, Anthropic, Google Gemini, Grok (xAI), Qwen (Alibaba), Kimi (Moonshot), MiniMax — select active, enter API key, test
+- [ ] Voice/STT tab: Whisper (built-in), Deepgram, AssemblyAI, Google Speech-to-Text — select active, enter API key, test
+- [ ] Floor Plans tab: MagicPlan, RoomSketcher — link-out + config
+- [ ] Property Platforms tab: Palace, Console Cloud, PropertyTree, REST Professional — connect, test, sync log
+- [ ] Active provider badge shown in sidebar/header
+- [ ] Voice button in inspection workflow uses whichever STT provider is active
+
+## Remote Inspection (PM Push + Pull)
+- [x] Add checklist JSON column to remote_submissions schema
+- [x] tRPC: createRemoteLink with optional checklist items (PM pushes rooms/tasks to tenant)
+- [x] PM Remote Inspection page: generate link, add checklist, copy/share link
+- [x] PM review panel: view submitted photos/notes per room, import into inspection
+- [x] Push notification to PM when tenant submits
+- [x] Polish tenant-facing /submit/:token page (show checklist items, room labels)
+
+## Integrations Page Rebuild — Provider Switcher
+- [x] Add provider_settings table (category: llm/voice/ocr/floor_plans, provider, api_key, is_active, test_status)
+- [x] tRPC integrations router: getProviders, setActiveProvider, saveApiKey, testProvider
+- [x] Providers tab — LLM: Built-in Manus, OpenAI, Anthropic, Google Gemini, Grok, Qwen, Kimi, MiniMax
+- [x] Providers tab — Voice/STT: Whisper (built-in), Deepgram, AssemblyAI, Google Speech
+- [x] Providers tab — OCR: Built-in (multimodal LLM), Google Vision, AWS Textract, Azure Document Intelligence
+- [x] Providers tab — Floor Plans: MagicPlan, RoomSketcher
+- [x] Platforms tab: Palace, Console Cloud, PropertyTree, REST Professional (existing, keep)
+- [x] Active provider badge visible in sidebar
+
+## Settings — Admin Tab (Owner Only)
+- [x] Add agent_configs table (agentId, name, description, skills JSON, connectors JSON, systemPrompt, preferredLlmProvider)
+- [x] Add skills table (id, name, description, category, isBuiltIn)
+- [x] Add connectors table (id, name, type, config JSON, isActive)
+- [x] Seed 4 agents: Fixx, Post-Inspection Workflow, Rental Appraisal, Maintenance Plan
+- [x] Seed skills library: readInspections, readProperties, readChattels, draftLetter, pushToPalace, generatePDF, readMaintenanceItems, readOwners, readInventory, sendEmail, readHealthyHomes, readSmokeAlarms
+- [x] Seed connectors: Database (all tables), Palace API, Console API, S3 Storage, Email, PDF Generator
+- [x] Admin tab UI: Skills library grid (enable/disable), Connectors list, Agent cards (skills + connectors + prompt tuning)
+- [x] Gate Admin tab behind owner role check (ctx.user.role === 'admin' on server, OWNER_OPEN_ID check on client)
